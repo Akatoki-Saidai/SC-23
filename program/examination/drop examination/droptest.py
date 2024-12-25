@@ -131,12 +131,65 @@ print(f"気圧: {pressure_value} hPa")
 
 #高度の計算
 # 標準大気モデルの定数
-T0 = 288.15  # 海面温度（ケルビン）
-L = 0.0065   # 温度減率（K/m）
-P0 = 1013.25  # 海面の気圧（hPa）
-g = 9.80665  # 重力加速度（m/s^2）
-R = 287.053  # 空気の比ガス定数（J/(kg·K))
+#T0 = 288.15  # 海面温度（ケルビン）
+#L = 0.0065   # 温度減率（K/m）
+#P0 = 1013.25  # 海面の気圧（hPa）
+#g = 9.80665  # 重力加速度（m/s^2）
+#R = 287.053  # 空気の比ガス定数（J/(kg·K))
 
 # 高度の計算式
-altitude = (T0 / L) * (1 - (pressure_value / P0) ** (R * L / g))
-return altitude
+#altitude = (T0 / L) * (1 - (pressure_value / P0) ** (R * L / g))
+#eturn altitude
+#bme280のセットアップ
+try:
+    bus = SMBus(1)
+    bme = BME280(i2c_dev=bus)
+
+        # 初めは異常値が出てくるので，空測定
+    for i in range(10):
+        try:
+                bme.get_temp_pres()
+        except Exception as e:
+                print(f"An error occurred during empty measurement in BMP: {e}")
+                csv.print('msg', f"An error occurred during empty measurement in BMP: {e}")      
+except Exception as e:
+    print(f"An error occured in setting bmp object: {e}")
+    csv.print('serious_error', f"An error occured in setting bmp280 object: {e}")
+    #led_red.blink(0.5, 0.5, 10, 0)
+
+    # bmp280高度算出用基準気圧取得
+try:
+    baseline = bme.get_baseline()
+    print("baseline: ", baseline)
+    # csv.print('alt_base_press', baseline)
+    first_altitude = bme.get_altitude(qnh=baseline)
+    csv.print('msg', f'first_altitude: {first_altitude}')
+
+except Exception as e:
+    print(f"An error occured in getting bmp data: {e}")
+    csv.print('serious_error', f"An error occured in getting bmp280 data: {e}")
+    #led_red.blink(0.5, 0.5, 10, 0)
+
+# bme280で高度(altitude)を計測
+try:
+    # temperature = bmp.get_temperature()
+    # pressure = bmp.get_pressure()
+    altitude = bme.get_altitude(qnh=baseline)
+    # print(f"temperture{temperature:05.2f}*C")
+    # print(f"pressure: {pressure:05.2f}hPa")
+# 高度をprint
+    print(f"Relative altitude: {altitude:05.2f} metres")
+except Exception as e:
+    print(f"An error occured in reading bmp: {e}")
+    csv.print('error', f"An error occured in reading bmp: {e}")
+
+# bmeの高度の値とbaselineの値(地上の高度)を比較し，その結果で条件分岐
+# 条件式を記述し，フェーズ移行
+if (altitude - first_altitude > 10 and data[5]):
+    phase = 1
+    print("detected drop!")
+    csv.print('msg', 'detected drop!')
+    #led_green.blink(0.5, 0.5)
+else:
+    pass
+
