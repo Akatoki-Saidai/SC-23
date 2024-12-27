@@ -306,7 +306,7 @@ class BNO055:
 
 
 #y軸方向の加速度
-def get_yaccel():
+def get_accel():
     # 変数定義、初期化
     bno = BNO055()
     if bno.begin() is not True:
