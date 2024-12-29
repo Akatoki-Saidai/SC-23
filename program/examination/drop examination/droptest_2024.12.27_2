@@ -10,7 +10,7 @@
 ####################################################################################################
 
 # import一覧
-import random                                                                                    # randomモジュールをインポートします。機体のランダムな動きをシミュレートするために使用されます。
+#import random                                                                                    # randomモジュールをインポートします。機体のランダムな動きをシミュレートするために使用されます。
 import time
 import struct
 import smbus
@@ -391,8 +391,8 @@ def get_altitude():
     return 44330 * (1.0 - math.pow(pressure_value / sea_level_pressure, 0.1903))
 
 
-default_y_accel = random.uniform(-0.05,0.05)                                                     # 機体の初期y軸加速度を0.0に設定します。地球上では最初は静止していることを表します。
-y_accel = default_y_accel                                                                        # 現在のy軸加速度を初期値で初期化します。
+#default_y_accel = random.uniform(-0.05,0.05)                                                    # 機体の初期y軸加速度を0.0に設定します。地球上では最初は静止していることを表します。
+y_accel = get_accel()                                                                            # 現在のy軸加速度を初期値で初期化します。
 default_height =  get_altitude()                                                                 # 機体の初期高度を最初に求めた高度に設定します。
 i = 1                                                                                            # 時間ステップを表すカウンター変数を1で初期化します。
 
@@ -411,9 +411,9 @@ def height_m_s(n):                                                              
     return velocity
 
 # 落下フェーズ開始～print("落下検出")
-while True:                                                                                      # 無限ループを開始します。機体が落下するまでシミュレーションを続けます。
-    ran = random.uniform(-1.0, 0.25)                                                             # -1.0から0.25の間の乱数を生成します。機体の動きにランダム性を加えます。
-    y_accel += ran                                                                               # y軸加速度に乱数を足して更新します。機体の加速度が変化することをシミュレートします。
+while True:                                                                                       # 無限ループを開始します。機体が落下するまでシミュレーションを続けます。
+    #ran = random.uniform(-1.0, 0.25)                                                             # -1.0から0.25の間の乱数を生成します。機体の動きにランダム性を加えます。
+    #y_accel += ran                                                                               # y軸加速度に乱数を足して更新します。機体の加速度が変化することをシミュレートします。
     print("y_accel = ", y_accel)
     print("height_m_s(i) = ", height_m_s(i))
     time.sleep(0.05)                                                                             # 0.05秒間プログラムを一時停止します。シミュレーションの速度を調整します。
