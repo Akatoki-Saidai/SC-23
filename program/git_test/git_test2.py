@@ -2,4 +2,7 @@
 #ゴミファイルなんで見つけ次第消してください
 
 #GPS2500
-print("aaaa")
+print("aaaa")bbbbb
+
+
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
