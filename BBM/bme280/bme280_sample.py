@@ -21,7 +21,7 @@ def writeReg(reg_address, data):
 
 def get_calib_param():
 	calib = []
-	
+
 	for i in range (0x88,0x88+24):
 		calib.append(bus.read_byte_data(i2c_address,i))
 	calib.append(bus.read_byte_data(i2c_address,0xA1))
@@ -46,7 +46,7 @@ def get_calib_param():
 	digH.append((calib[28]<< 4) | (0x0F & calib[29]))
 	digH.append((calib[30]<< 4) | ((calib[29] >> 4) & 0x0F))
 	digH.append( calib[31] )
-	
+
 	for i in range(1,2):
 		if digT[i] & 0x8000:
 			digT[i] = (-digT[i] ^ 0xFFFF) + 1
@@ -57,7 +57,7 @@ def get_calib_param():
 
 	for i in range(0,6):
 		if digH[i] & 0x8000:
-			digH[i] = (-digH[i] ^ 0xFFFF) + 1  
+			digH[i] = (-digH[i] ^ 0xFFFF) + 1
 
 def readData():
 	data = []
