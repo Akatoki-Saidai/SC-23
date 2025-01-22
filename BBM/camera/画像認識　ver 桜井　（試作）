@@ -8,7 +8,7 @@ model = YOLO("c:/Users/nagan/OneDrive - 埼玉大学/デスクトップ/パイ�
   # 事前に学習済みの重みファイルを指定 作成する必要あり
 
 def process_webcam(output_file):
-    # カメラのキャプチャを開始 保存したいファイルの変更はここや！
+    # カメラのキャプチャを開始 
     cap = cv2.VideoCapture(0)  # 0はデフォルトのウェブカメラを指します
 
     if not cap.isOpened():
@@ -53,8 +53,9 @@ def process_webcam(output_file):
     out.release()
     cv2.destroyAllWindows()
 
-def webcam(output_file: str = "Camera_Movie.mp4"):
+def webcam(output_file: str = "C:/Users/nagan/OneDrive - 埼玉大学/デスクトップ/パイソン/映像.mp4"):
     process_webcam(output_file)
+ # 保存したいファイルの変更はここや！
 
 if __name__ == "__main__":
     webcam()
