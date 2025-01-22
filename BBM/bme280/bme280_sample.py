@@ -21,7 +21,7 @@ def writeReg(reg_address, data):
 
 def get_calib_param():
 	calib = []
-
+	
 	for i in range (0x88,0x88+24):
 		calib.append(bus.read_byte_data(i2c_address,i))
 	calib.append(bus.read_byte_data(i2c_address,0xA1))
@@ -46,7 +46,7 @@ def get_calib_param():
 	digH.append((calib[28]<< 4) | (0x0F & calib[29]))
 	digH.append((calib[30]<< 4) | ((calib[29] >> 4) & 0x0F))
 	digH.append( calib[31] )
-
+	
 	for i in range(1,2):
 		if digT[i] & 0x8000:
 			digT[i] = (-digT[i] ^ 0xFFFF) + 1
@@ -57,7 +57,7 @@ def get_calib_param():
 
 	for i in range(0,6):
 		if digH[i] & 0x8000:
-			digH[i] = (-digH[i] ^ 0xFFFF) + 1
+			digH[i] = (-digH[i] ^ 0xFFFF) + 1  
 
 def readData():
 	data = []
@@ -93,7 +93,7 @@ def compensate_P(adc_P):
 	v2 = ((pressure / 4.0) * digP[7]) / 8192.0
 	pressure = pressure + ((v1 + v2 + digP[6]) / 16.0)  
 
-	print "pressure : %7.2f hPa" % (pressure/100)
+	print ("pressure : %7.2f hPa" % (pressure/100))
 
 def compensate_T(adc_T):
 	global t_fine
@@ -101,7 +101,7 @@ def compensate_T(adc_T):
 	v2 = (adc_T / 131072.0 - digT[0] / 8192.0) * (adc_T / 131072.0 - digT[0] / 8192.0) * digT[2]
 	t_fine = v1 + v2
 	temperature = t_fine / 5120.0
-	print "temp : %-6.2f ℃" % (temperature) 
+	print ("temp : %-6.2f ℃" % (temperature) )
 
 def compensate_H(adc_H):
 	global t_fine
@@ -115,7 +115,7 @@ def compensate_H(adc_H):
 		var_h = 100.0
 	elif var_h < 0.0:
 		var_h = 0.0
-	print "hum : %6.2f ％" % (var_h)
+	print ("hum : %6.2f ％" % (var_h))
 
 
 def setup():
