@@ -1,3 +1,5 @@
+#https://www.system-exe.co.jp/iot02/
+
 import RPi.GPIO as GPIO  # GPIOに関わるライブラリ宣言
 import time  # Pythonで時間に関わる処理のライブラリ宣言
 
