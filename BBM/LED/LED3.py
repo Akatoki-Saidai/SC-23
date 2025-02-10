@@ -1,3 +1,5 @@
+#https://www.system-exe.co.jp/iot02/
+
 #timeモジュールをインポート
 import time
 
