@@ -1,4 +1,4 @@
-#https://www.system-exe.co.jp/iot02/
+#https://monomonotech.jp/kurage/raspberrypi/led_chikachika.html
 
 #timeモジュールをインポート
 import time
