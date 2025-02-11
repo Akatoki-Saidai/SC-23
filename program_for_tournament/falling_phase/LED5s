@@ -3,7 +3,6 @@
 
 #timeモジュールをインポート
 import time
-
 #RPi.GPIOモジュールをインポート
 import RPi.GPIO as GPIO
 
