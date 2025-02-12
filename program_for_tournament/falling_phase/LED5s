@@ -1,0 +1,20 @@
+#新井
+#https://monomonotech.jp/kurage/raspberrypi/led_chikachika.html
+
+#timeモジュールをインポート
+import time
+#RPi.GPIOモジュールをインポート
+import RPi.GPIO as GPIO
+
+# BCM(GPIO番号)で指定する設定
+GPIO.setmode(GPIO.BCM)
+
+# GPIO17を出力モード設定
+GPIO.setup(17, GPIO.OUT)
+
+#####ここからLEDが光るコードに突入#####
+
+GPIO.output(17, 1)# GPIO17の出力を1にして、LED点灯
+time.sleep(5)
+GPIO.output(17, 0)# GPIO17の出力を0にして、LED消灯
+time.sleep(1)
