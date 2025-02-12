@@ -2,8 +2,19 @@
 
 import time
 
+# BCM(GPIO番号)で指定する設定
+GPIO.setmode(GPIO.BCM)
+
+# GPIO5を出力モード設定
+GPIO.setup(5, GPIO.OUT)
+
+#####実行#####
+
 print("RPi4b was turned on")
 
 for i in range(1, 10 + 1):
-    time.sleep(1)
     print(str(i) + "秒経過")
+    GPIO.output(5, i % 2)# GPIO5の出力を奇数秒の時に、LED点灯
+    time.sleep(1)
+
+GPIO.output(5, 0)# GPIO5の出力を0にして、LED消灯
