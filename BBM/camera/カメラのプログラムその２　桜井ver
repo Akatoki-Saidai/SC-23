@@ -1,0 +1,164 @@
+import cv2
+import numpy as np
+import csv
+import supervision as sv
+from ultralytics import YOLO
+
+def print_csv(filename, data):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(data)
+
+class Camera:
+    def __init__(self, model_path):
+        self.model = YOLO(model_path)
+        self.bounding_box_annotator = sv.BoundingBoxAnnotator()
+        self.label_annotator = sv.LabelAnnotator()
+
+    def red_detect(self, frame):
+        # HSV色空間に変換
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        # 赤色のHSVの値域1
+        hsv_min = np.array([0, 117, 104])
+        hsv_max = np.array([11, 255, 255])
+        mask1 = cv2.inRange(hsv, hsv_min, hsv_max)
+
+        # 赤色のHSVの値域2
+        hsv_min = np.array([169, 117, 104])
+        hsv_max = np.array([179, 255, 255])
+        mask2 = cv2.inRange(hsv, hsv_min, hsv_max)
+
+        return mask1 + mask2
+
+    def analyze_red(self, frame, mask):
+        camera_order = 0
+        # 画像の中にある領域を検出する
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+        # 画像の中に赤の領域があるときにループ
+        if 0 < len(contours):
+            # 輪郭群の中の最大の輪郭を取得する
+            biggest_contour = max(contours, key=cv2.contourArea)
+
+            # 最大の領域の外接矩形を取得する
+            rect = cv2.boundingRect(biggest_contour)
+
+            # 最大の領域の中心座標を取得する
+            center_x = (rect[0] + rect[2] // 2)
+            center_y = (rect[1] + rect[3] // 2)
+            print_csv('camera_center.csv', [center_x, center_y])
+
+            # 最大の領域の面積を取得する
+            area = cv2.contourArea(biggest_contour)
+            print_csv('camera_area.csv', [area])
+
+            # 最大の領域の長方形を表示する
+            cv2.rectangle(frame, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (0, 0, 255), 2)
+
+            # 最大の領域の中心座標を表示する
+            cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
+
+            # 最大の領域の面積を表示する
+            cv2.putText(frame, str(area), (rect[0], rect[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 1)
+
+            frame_center_x = frame.shape[1] // 2
+            print_csv('camera_frame_size_x.csv', [frame.shape[1]])
+
+            # 中心座標のx座標が画像の中心より大きいか小さいか判定
+            if area > 7000:
+                print("Close enough to red")
+                print_csv('camera_order.csv', ['close'])
+                camera_order = 4
+            elif area > 10:
+                if frame_center_x - 50 <= center_x <= frame_center_x + 50:
+                    print("The red object is in the center")
+                    print_csv('camera_order.csv', ['center'])
+                    camera_order = 1
+                elif center_x > frame_center_x + 50:
+                    print("The red object is in the right")
+                    print_csv('camera_order.csv', ['right'])
+                    camera_order = 2
+                elif center_x < frame_center_x - 50:
+                    print("The red object is in the left")
+                    print_csv('camera_order.csv', ['left'])
+                    camera_order = 3
+            else:
+                print("The red object is too minimum")
+                print_csv('camera_order.csv', ['not found'])
+        else:
+            print("The red object is None")
+            print_csv('camera_order.csv', ['none'])
+
+        return frame, camera_order
+
+    def calculate_red_ratio(self, mask):
+        # 赤色部分のピクセル数を計算
+        red_pixels = np.sum(mask > 0)
+        
+        # 全体のピクセル数を計算
+        total_pixels = mask.shape[0] * mask.shape[1]
+        
+        # 赤色部分の割合を計算
+        red_ratio = red_pixels / total_pixels
+        
+        return red_ratio
+
+    def process_webcam(self, output_file):
+        # カメラのキャプチャを開始
+        cap = cv2.VideoCapture(0)  # 0はデフォルトのウェブカメラを指します
+        cap.set(cv2.CAP_PROP_FPS, 30)  # 30 FPSに設定
+
+        if not cap.isOpened():
+            print("Error: Could not open camera.")
+            return
+
+        # カメラの幅、高さ、フレームレートを取得
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        # ビデオライターの設定
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # コーデックの設定
+        out = cv2.VideoWriter(output_file, fourcc, fps, (width, height))
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # 赤色物体の検出
+            mask = self.red_detect(frame)
+            frame, camera_order = self.analyze_red(frame, mask)
+            
+            # 赤色部分の割合を計算
+            red_ratio = self.calculate_red_ratio(mask)
+            print(f"Red area ratio: {red_ratio:.2%}")
+
+            # モデルでフレームを処理
+            results = self.model(frame, conf=0.70)[0]
+            detections = sv.Detections.from_ultralytics(results)
+
+            # フレームに注釈を追加
+            annotated_frame = self.bounding_box_annotator.annotate(scene=frame, detections=detections)
+            annotated_frame = self.label_annotator.annotate(scene=annotated_frame, detections=detections)
+
+            # 注釈付きフレームをビデオファイルに書き込み
+            out.write(annotated_frame)
+
+            # フレームを表示
+            cv2.imshow("Camera", annotated_frame)
+            if cv2.waitKey(25) & 0xFF == ord("q"):
+                break
+
+        # リソースの解放
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
+def webcam(output_file: str = "C:/Users/nagan/OneDrive - 埼玉大学/デスクトップ/パイソン/映像.mp4"):
+    camera = Camera("c:/Users/nagan/OneDrive - 埼玉大学/デスクトップ/パイソン/best.pt")
+    camera.process_webcam(output_file)
+
+if __name__ == "__main__":
+    webcam()

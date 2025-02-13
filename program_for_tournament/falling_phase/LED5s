@@ -9,12 +9,12 @@ import RPi.GPIO as GPIO
 # BCM(GPIO番号)で指定する設定
 GPIO.setmode(GPIO.BCM)
 
-# GPIO17を出力モード設定
-GPIO.setup(17, GPIO.OUT)
+# GPIO5を出力モード設定
+GPIO.setup(5, GPIO.OUT)
 
 #####ここからLEDが光るコードに突入#####
 
-GPIO.output(17, 1)# GPIO17の出力を1にして、LED点灯
+GPIO.output(5, 1)# GPIO5の出力を1にして、LED点灯
 time.sleep(5)
-GPIO.output(17, 0)# GPIO17の出力を0にして、LED消灯
+GPIO.output(5, 0)# GPIO5の出力を0にして、LED消灯
 time.sleep(1)
