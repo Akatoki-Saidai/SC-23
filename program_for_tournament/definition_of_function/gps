@@ -1,1 +1,23 @@
 #荒川
+import time
+import serial
+from GT-502MGG-N import GT-502MGG-N
+import busio
+
+# GPS通信のボーレート
+GPS_BAUDRATE = 9600
+
+# GPSモジュールの初期化
+uart = serial.Serial("/dev/serial0", baudrate=GPS_BAUDRATE, timeout=10)
+gps = GT-502MGG-N(i2c)
+
+# 方位の定義
+c_dir = [
+    "  N   ", "N-N-E ", " N-E  ", "E-N-E ", "  E   ", "E-S-E ", " S-E  ", "S-S-E ",
+    "  S   ", "S-S-W ", " S-W  ", "W-S-W ", "  W   ", "W-N-W ", " N-W  ", "N-N-W ",
+    "WAIT  "
+]
+
+# 前回の状態の保存
+f_olddir = 999
+i_oldmin = 999
