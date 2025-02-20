@@ -31,7 +31,7 @@ def setup(AIN1, AIN2, BIN1, BIN2):
     return right, left
 
 
-def accel(right, left):
+def accel(right, left):#加速
     csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -47,7 +47,7 @@ def accel(right, left):
     csv.print('msg', 'motor: accel')
 
 
-def brake(right, left):
+def brake(right, left):#減速
     power_r = float(right.value)
     power_l = float(left.value)
 
@@ -76,7 +76,7 @@ def brake(right, left):
     csv.print('msg', 'motor: brake')
 
 
-def leftturn(right, left):
+def leftturn(right, left):#左に旋回
     
     right.value = 0
     left.value = 0
@@ -111,7 +111,7 @@ def leftturn(right, left):
 
 
 
-def rightturn(right, left):
+def rightturn(right, left):#右に旋回
     
     right.value = 0
     left.value = 0
@@ -147,7 +147,7 @@ def rightturn(right, left):
 
 
 
-def rightonly(right, left):
+def rightonly(right, left):#右の車輪のみ回す()
     
     right.value = 0
     left.value = 0
@@ -178,7 +178,7 @@ def rightonly(right, left):
 
 
 
-def leftonly(right, left):
+def leftonly(right, left):#左の車輪のみ回す
     
     right.value = 0
     left.value = 0
