@@ -4,5 +4,5 @@
 bme280 !@@!
 camera
 GT-502MGG-N(GNSS)
-ko-dotanntou
+ko-dotanntou#菅原
 aaaaaaaaaaaaaaaa
