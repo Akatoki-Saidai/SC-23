@@ -11,6 +11,8 @@ import smbus
 import time
 import struct
 
+import make_csv
+
 
 ##########
 # クラス
@@ -286,11 +288,45 @@ class BNO055:
 	def getVector(self, vectorType):
 		buf = self.readBytes(vectorType, 6)
 		xyz = struct.unpack('hhh', struct.pack('BBBBBB', buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]))
-		if vectorType == BNO055.VECTOR_MAGNETOMETER:	scalingFactor = 16.0
-		elif vectorType == BNO055.VECTOR_GYROSCOPE:	scalingFactor = 900.0
-		elif vectorType == BNO055.VECTOR_EULER: 		scalingFactor = 16.0
-		elif vectorType == BNO055.VECTOR_GRAVITY:	scalingFactor = 100.0
-		else:											scalingFactor = 1.0
+		if vectorType == BNO055.VECTOR_MAGNETOMETER:
+			scalingFactor = 16.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			if not(10 < sum(abs(n) for n in result_vector) < 250):
+				raise(ValueError(f'BNO measurement is abnormal. mag: {result_vector}'))
+			# if not(-80 < result_vector[0] < 80 and -80 < result_vector[1] < 80 and -80 < result_vector[2] < 80):
+				# raise(ValueError(f'BNO measurement is abnormal. mag: {result_vector}'))
+			make_csv.print('mag', result_vector)
+		elif vectorType == BNO055.VECTOR_GYROSCOPE:
+			scalingFactor = 900.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			if sum(abs(n) for n in result_vector) > 45:
+				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
+			make_csv.print('gyro', result_vector)
+		elif vectorType == BNO055.VECTOR_EULER:
+			scalingFactor = 16.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			make_csv.print('euler', result_vector)
+
+		elif vectorType == BNO055.VECTOR_GRAVITY:
+			scalingFactor = 100.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			if sum(abs(n) for n in result_vector) > 15:
+				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
+			make_csv.print('grav', result_vector)
+		elif vectorType == BNO055.VECTOR_LINEARACCEL:
+			scalingFactor = 100.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			if sum(abs(n) for n in result_vector) > 25:
+				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
+			make_csv.print('accel_line', result_vector)
+		elif vectorType == BNO055.VECTOR_ACCELEROMETER:
+			scalingFactor = 100.0
+			result_vector = [i/scalingFactor for i in xyz_m]
+			if sum(abs(n) for n in result_vector) > 50:
+				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
+			make_csv.print('accel_all', result_vector)
+		else:
+			scalingFactor = 1.0
 		return tuple([i/scalingFactor for i in xyz])
 
 	def getQuat(self):

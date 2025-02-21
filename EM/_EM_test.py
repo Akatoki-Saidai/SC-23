@@ -1,6 +1,7 @@
 import time
 
 from bno055 import BNO055
+import make_csv
 
 def main():
 
@@ -12,6 +13,7 @@ def main():
             print("Error initializing device")
         time.sleep(1)
         bno.setExternalCrystalUse(True)
+        make_csv.print("msg","セットアップ完了")
     except Exception as e:
         print(f"An error occurred in setting bno055: {e}")
 
