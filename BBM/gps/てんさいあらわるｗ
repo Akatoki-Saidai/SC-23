@@ -1,0 +1,196 @@
+from math import floor, modf
+try:
+    import utime  # MicroPython環境での時間処理
+except ImportError:
+    import time  # 標準のPython環境での時間処理
+import csv_print as csv  # 測定値をCSV形式で記録
+
+class MicropyGPS(object):
+    """GPS NMEA Sentence Parser. Creates object that stores all relevant GPS data and statistics.
+    Parses sentences one character at a time using update(). """
+
+    SENTENCE_LIMIT = 90  # NMEA文の最大文字数
+    __HEMISPHERES = ('N', 'S', 'E', 'W')  # 北半球、南半球、東経、西経
+    __NO_FIX = 1  # GPSの固定状態なし
+    __FIX_2D = 2  # 2D固定
+    __FIX_3D = 3  # 3D固定
+    __DIRECTIONS = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W',
+                    'WNW', 'NW', 'NNW')  # 方位
+    __MONTHS = ('January', 'February', 'March', 'April', 'May',
+                'June', 'July', 'August', 'September', 'October',
+                'November', 'December')  # 月
+
+    def __init__(self, local_offset=0, location_formatting='ddm'):
+        """
+        GPSオブジェクトの初期化
+        local_offset (int): UTCからのタイムゾーンの差
+        location_formatting (str): 緯度経度の表示形式（ddm, dms, dd）
+        """
+        # オブジェクトのステータスフラグ
+        self.sentence_active = False
+        self.active_segment = 0
+        self.process_crc = False
+        self.gps_segments = []
+        self.crc_xor = 0
+        self.char_count = 0
+        self.fix_time = 0
+
+        # 文の統計情報
+        self.crc_fails = 0
+        self.clean_sentences = 0
+        self.parsed_sentences = 0
+
+        #
+        self.log_handle = None
+        self.log_en = False
+
+        # 文からのデータ
+        # 時間
+        self.timestamp = [0, 0, 0.0]
+        self.date = [0, 0, 0]
+        self.local_offset = local_offset
+
+        # 位置情報と移動情報
+        self._latitude = [0, 0.0, 'N']
+        self._longitude = [0, 0.0, 'W']
+        self.coord_format = location_formatting
+        self.speed = [0.0, 0.0, 0.0]
+        self.course = 0.0
+        self.altitude = 0.0
+        = []
+        self.last_sv_sentence = 0
+        self.total_sv_sentences = 0
+        self.satellite_data = dict()
+        self.hdop = 0.0
+        self.pdop = 0.0
+        self.vdop = 0.0
+        self.valid = False
+        self.fix_stat = 0
+        self.fix_type = 1
+
+    ########################################
+    # 座標変換関数
+    ########################################
+   度データを適切な形式にフォーマット"""
+        if self.coord_format == 'dd':
+            decimal_degrees = self._latitude[0] + (self._latitude[1] / 60)
+
+            # 0度は異常
+            if decimal_degrees == 0:
+                raise(ValueError(f'latitude is abnormal: {decimal_degrees}'))
+            
+            csv.print('lat', decimal_degrees)  # 測地値を記録
+            return [decimal_degrees, self._latitude[2]]
+        elif self.coord_format == 'dms':
+            minute_parts = modf(self._latitude[1])
+           (minute_parts[0] * 60)
+            return [self._latitude[0], int(minute_parts[1]), seconds, self._latitude[2]]
+        else:
+            return self._latitude
+
+    @property
+    def longitude(self):
+        """経度データを適切な形式にフォーマット"""
+        if self.coord_format == 'dd':
+            decimal_degrees = self._longitude[0] + (self._longitude[1] / 60)
+            
+            # 0度は異常
+            if decimal_degrees == 0:
+                raise(ValueError(f'longitude is abnormal: {decimal_degrees}'))
+            
+            csv.print('lon', decimal_degrees)  # 測地値を記録
+            return [decimal_degrees, self._longitude[2]]
+        elif self.coord_format == 'dms':
+            minute_parts = modf(self._longitude[1])
+            seconds = round(minute_parts[0] * 60)
+            return [self._longitude[0], int(minute_parts[1]), seconds, self._longitude[2]]
+        else:
+            return self._longitude
+
+    ########################################
+    #"):
+        """
+        GPSデータログオブジェクトを作成
+        """
+        # 書き込みモードを設定（上書きまたは追記）
+        mode_code = 'w' if mode == 'new' else 'a'
+
+        try:
+            self.log_handle = open(target_file, mode_code)
+        except AttributeError:
+            print("Invalid FileName")
+            return False
+
+               self.log_en = False
+        return True
+
+    def write_log(self, log_string):
+        """最後の有効なNMEA文の文字をアクティブなファイルハンドラに書き込む"""
+        try:
+            self.log_handle.write(log_string)
+        except TypeError:
+            return False
+        return True
+
+    ########################################
+    # NMEA文の解析関数
+    def gprmc(self):
+        """推奨最小限のGPS/トランジットデータ（RMC）文を解析
+        UTCタイムスタンプ、緯度、経度、コース、速度、日付、固定状態を更新
+        """
+        # UTCタイムスタンプの解析
+        try:
+            utc_string = self.gps_segments[1]
+
+            if utc_string:  # タイムスタンプが見つかった場合
+                hours = (int(utc_string[0:2]) + self.local_offset) % 24
+                minutes = int(utc_string[2:4])
+                seconds = float(utc_string[4:])
+                self.timestamp = [hours, minutes, seconds]
+            else:  # タイムスタンプがまだない場合
+                self.timestamp = [0, 0, 0.0]
+
+        except ValueError:  # タイムスタンプの値が不正な場合
+            return False
+
+        # 日付の解析
+        try:
+            date_string = self.gps_segments[9]
+
+            if date_string:  # 日付が見つかった場合
+                day = int(date_string[0:2])
+                month = int(date_string[2:4])
+                year = int(date_string[4:6])
+                self.date = (day, month, year)
+            else:  # 日付がまだない場合
+                self.date = (0, 0, 0)
+
+        except ValueError:  # 日付の値が不正な場合
+            return False
+
+        # 受信データの有効フラグをチェック
+        if self.gps_segments[2] == 'A':  # 受信データが有効/固定されている場合
+
+            # 緯度と経度の解析
+            try:
+                # 緯度
+                l_string = self.gps_segments[3]
+                lat_degs = int(l_string[0:2])
+                lat_mins = float(l_string[2:])
+                lat_hemi = self.gps_segments[4]
+
+                # 経度
+                l_string = self.gps_segments[5]
+                lon_degs = int(l_string[0:3])
+                lon_mins = float(l_string[3:])
+                lon_hemi = self.gps_segments[6]
+            except ValueError:
+                return False
+
+            if lat_hemi not in self.__HEMISPHERES:
+                return False
+
+            if lon_hemi not in self.__HEMISPHERES:
+                return False
+
+           
