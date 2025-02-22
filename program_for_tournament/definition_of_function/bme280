@@ -1,7 +1,7 @@
 #岡本
 import smbus
 import time
-import RPi.GPIO as GPIO  # RPi.GPIO モジュールのインポート
+#import RPi.GPIO as GPIO  # RPi.GPIO モジュールのインポート
 
 class BNO055:
     # GPIOの設定
