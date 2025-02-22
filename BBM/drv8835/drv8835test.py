@@ -78,3 +78,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+プログラム終了後にモーターが勝手に動いてしまう現象は、
+factory.close()
+か
+GPIO.output(PIN_AIN1, GPIO.LOW)
+GPIO.output(PIN_AIN2, GPIO.LOW)
+GPIO.output(PIN_BIN1, GPIO.LOW)
+GPIO.output(PIN_BIN2, GPIO.LOW)
+で解決できるかもしれない
+"""
