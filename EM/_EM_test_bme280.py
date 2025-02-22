@@ -26,7 +26,7 @@ def main():
 
 
       
-     # bmp280高度算出用基準気圧取得
+     # bme280高度算出用基準気圧取得
     try:
         baseline = bmp.get_baseline()
         print("baseline: ", baseline)
