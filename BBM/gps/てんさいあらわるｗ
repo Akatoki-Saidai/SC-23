@@ -1,0 +1,799 @@
+# MicropyGPS - a GPS NMEA sentence parser for Micropython/Python 3.X
+# Copyright (c) 2017 Michael Calvin McCoy (calvin.mccoy@protonmail.com)
+# The MIT License (MIT) - see LICENSE file
+
+# TODO:
+# Time Since First Fix
+# Distance/Time to Target
+# More Helper Functions
+# Dynamically limit sentences types to parse
+
+from math import floor, modf
+
+# utimeまたはtimeをインポートして時間処理を行う
+try:
+    # MicroPython上で実行されていると仮定
+    import utime
+except ImportError:
+    # それ以外の場合は標準のtimeモジュールを使用
+    import time
+
+# 測定値の出力用
+import csv_print as csv
+
+class MicropyGPS(object):
+    """GPS NMEA文のパーサー。すべての関連GPSデータと統計情報を格納するオブジェクトを作成。
+    update()を使用して1文字ずつ文を解析します。"""
+
+    # 有効な文の最大文字数（GGA文に基づく）
+    SENTENCE_LIMIT = 90
+    __HEMISPHERES = ('N', 'S', 'E', 'W')
+    __NO_FIX = 1
+    __FIX_2D = 2
+    __FIX_3D = 3
+    __DIRECTIONS = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W',
+                    'WNW', 'NW', 'NNW')
+    'March', 'April', 'May',
+                'June', 'July', 'August', 'September', 'October',
+                'November', 'December')
+
+    def __init__(self, local_offset=0, location_formatting='ddm'):
+        """
+        GPSオブジェクトのステータスフラグ、内部データレジスタなどを設定
+            local_offset (int): UTCからのタイムゾーンの差
+            location_formatting (str): 緯度/経度の表示形式：
+                                       Decimal Degree Minute (ddm) - 40° 26.767′ N
+                                      26′ 46″ N
+                                       Decimal Degrees (dd) - 40.446° N
+        """
+
+        #####################
+        # オブジェクトのステータスフラグ
+        self.sentence_active = False
+        self.active_segment = 0
+        self.process_crc = False
+        self.gps_segments = []
+        self.crc_xor = 0
+        self.char_count = 0
+        self.fix_time = 0
+
+        #####################
+        # 文の統計情報
+        self.crc_fails = 0
+        self.clean_sentences = 0
+        self.parsed_sentences = 0
+
+        #####################
+        # ログ関連
+        self.log_handle = None
+        self.log_en = False
+
+        #####################
+        # 文からのデータ
+        # 時間
+        self.timestamp = [0, 0, 0.0]
+        self.date = [0, 0, 0]
+        self.local_offset = local_offset
+
+        # 位置情報と移動情報
+        self._latitude = [0, 0.0, 'N']
+        self._longitude = [0, 0.0, 'W']
+        self.coord_format = location_formatting
+        self.speed = [0.0, 0.0, 0.0]
+        self.course = 0.0
+        self.altitude = 0.0
+        self.geoid_height = 0.0
+
+        # GPS情報
+        self.satellites_in_view = 0
+        self.satellites_in_use = 0
+        self.satellites_used = []
+        self.last_sv_sentence = 0
+        self.total_sv_sentences = 0
+        self.satellite_data = dict()
+        self.hdop = 0.0
+        self.pdop = 0.0
+        self.vdop = 0.0
+        self.valid = False
+        self.fix_stat = 0
+        self.fix_type = 1
+
+   数
+    ########################################
+    @property
+    def latitude(self):
+        """緯度データを適切な形式にフォーマット"""
+        if self.coord_format == 'dd':
+            decimal_degrees = self._latitude[0] + (self._latitude[1] / 60)
+
+            # 0度は異常
+            if decimal_degrees == 0:
+                raise(ValueError(f'latitude is abnormal: {decimal_degrees}'))
+            
+            csv.print('lat', decimal_degrees)  # 測地値を記録
+            return [decimal_degrees, self._latitude[2]]
+        elif self.coord_format == 'dms':
+            minute_parts = modf(self._latitude[1])
+            seconds = round(minute_parts[0] * 60)
+            return [self._latitude[0], int(minute_parts[1]), seconds, self._latitude[2]]
+        else:
+            return self._latitude
+
+    @property
+    def longitude(self):
+        """経度データを適切な形式にフォーマット"""
+        if self.coord_format == 'dd':
+            decimal_degrees = self._longitude[0] + (self._longitude[1] / 60)
+            
+grees == 0:
+                raise(ValueError(f'longitude is abnormal: {decimal_degrees}'))
+            
+            csv.print('lon', decimal_degrees)  # 測地値を記録
+            return [decimal_degrees, self._longitude[2]]
+        elif self.coord_format == 'dms':
+            minute_parts = modf(self._longitude[1])
+            seconds = round(minute_parts[0] * 60)
+            return [self._longitude[0], int(minute_parts[1]), seconds, self._longitude[2]]
+        else:
+            return self._longitude
+
+   _logging(self, target_file, mode="append"):
+        """
+        GPSデータログオブジェクトを作成
+        """
+        # 書き込みモードを設定（上書きまたは追記）
+        mode_code = 'w' if mode == 'new' else 'a'
+
+        try:
+            self.log_handle = open(target_file, mode_code)
+        except AttributeError:
+            print("Invalid FileName")
+            return False
+
+        self.log_en = True
+        return True
+
+    def stop_logging(self):
+        """
+        ログファイルハンドラを閉じ、ログを無効にする
+        """
+        try:
+            self.log_handle.close()
+        except AttributeError:
+            print("Invalid Handle")
+            return False
+
+        self.log_en = False
+        return True
+
+    def write_log(self, log_string):
+        """最後の有効なNMEA文の文字をアクティブなファイルハンドラに書き込む"""
+        try:
+            self.log_handle.write(log_string)
+        except TypeError:
+            return False
+        ########################################
+    # NMEA文の解析関数
+    ########################################
+    def gprmc(self):
+        """推奨最小限のGPS/トランジットデータ（RMC）文を解析
+        UTCタイムスタンプ、緯度、経度、コース、速度、日付、固定状態を更新
+        """
+
+        # UTCタイムスタンプの解析
+        try:
+            utc_string = self.gps_segments[1]
+
+            if utc_string:  # タイムスタンプが見つかった場合
+                hours = (int(utc_string[0:2]) + self.local_offset) % 24
+                minutes = int(utc_string[2:4])
+                seconds = float(utc_string[4:])
+                self.timestamp = [hours, minutes, seconds]
+            else:  # タイムスタンプがまだない場合
+                self.timestamp = [0, 0, 0.0]
+
+        except ValueError:  # タイムスタンプの値が不正な場合
+            return False
+
+        # 日付の解析
+        try:
+            date_string = self.gps_segments[9]
+
+            if date_string:  # 日付が見つかった場合
+                day = int(date_string[0:2])
+                month = int(date_string[2:4])
+                year = int(date_string[4:6])
+                self.date = (day, month, year)
+            else:  # 日付がまだない場合
+                self.date = (0, 0, 0)
+
+        except ValueError:  # 日付の値が不正な場合
+            return False
+
+        # 受信機データの有効フラグを確認
+        if self.gps_segments[2] == 'A':  # 受信機からのデータが有効/固定されている場合
+# 経度/緯度の解析
+            try:
+                # 緯度
+                l_string = self.gps_segments[3]
+                lat_degs = int(l_string[0:2])
+                lat_mins = float(l_string[2:])
+                lat_hemi = self.gps_segments[4]
+
+                # 経度
+                l_string = self.gps_segments[5]
+                lon_degs = int(l_string[0:3])
+                lon_mins = float(l_string[3:])
+                lon_hemi = self.gps_segments[6]
+            except ValueError:
+                return False
+
+            if lat_hemi not in self.__HEMISPHERES:
+                return False
+
+            if lon_hemi not in self.__HEMISPHERES:
+                return False
+
+            # 速度の解析
+            try:
+                spd_knt = float(self.gps_segments[7])
+            except ValueError:
+               解析
+            try:
+                if self.gps_segments[8]:
+                    course = float(self.gps_segments[8])
+                else:
+                    course = 0.0
+            except ValueError:
+                return False
+
+            # オブジェクトデータの更新
+            self._latitude = [lat_degs, lat_mins, lat_hemi]
+            self._longitude = [lon_degs, lon_mins, lon_hemi]
+            # mphとkm/hを含む
+            self.speed = [spd_knt, spd_knt * 1.151, spd_knt * 1.852]
+            self.course = course
+            self.valid = True
+
+            # 最後の固定時間の更新
+            self.new_fix_time()
+
+        else:  # 文が「無効」の場合、位置データをクリア
+            self._latitude = [0, 0.0, 'N']
+            self._longitude = [0, 0.0, 'W']
+            self.speed = [0.0, 0.0, 0.0]
+            self.course = 0.0
+            self.valid = False
+
+        return True
+
+    def gpgll(self):
+        """地理的緯度と経度（GLL）文を解析。UTCタイムスタンプ、緯度、経度、固定[5]
+
+            if utc_string:  # タイムスタンプが見つかった場合
+                hours = (int(utc_string[0:2]) + self.local_offset) % 24
+                minutes = int(utc_string[2:4])
+                seconds = float(utc_string[4:])
+                self.timestamp = [hours, minutes, seconds]
+            else:  # タイムスタンプがまだない場合
+                self.timestamp = [0, 0, 0.0]
+
+        except ValueError:  # タイムスタンプの値が不正な場合
+            return False
+
+        # 受信機データの有効フラグを確認
+        if self.gps_segments[6] == 'A':  # 受信機からのデータが有効/固定されている場合
+
+            # 経度/緯度の解析
+            try:
+                # 緯度
+                l_string = self.gps_segments[1]
+                lat_degs = int(l_string[0:2])
+                lat_mins = float(l_string[2:])
+                lat_hemi = self.gps_segments[2]
+
+                # 経度
+                l_string = self.gps_segments[3]
+                lon_degs = int(l_string[0:3])
+                lon_mins = float(l_string[3:])
+                lon_hemi = self.gps_segments[4]
+            except ValueError:
+                return False
+
+            if lat_hemi not in self.__HEMISPHERES:
+                return False
+
+            if lon_hemi not in self.__HEMISPHERES:
+                return False
+
+            # オブジェクトデータの更新
+            self._latitude = [lat_degs, lat_mins, lat_hemi]
+            self._longitude = [lon_degs, lon_mins, lon_hemi]
+            self.valid = True
+
+            # 最後の固定時間の更新
+            self.new_fix_time()
+
+        else:  # 文が「無効」の場合、位置データをクリア
+            self._latitude = [0, 'N']
+            self._longitude = [0, 0.0, 'W']
+            self.valid = False
+
+        return True
+
+    def gpvtg(self):
+        """トラックメイドグッドと地上速度（VTG）文を解析。速度とコースを更新"""
+        try:
+            course = float(self.gps_segments[1]) if self.gps_segments[1] else 0.0
+            spd_knt = float(self.gps_segments[5]) if self.gps_segments[5] else 0.0
+        except ValueError:
+            return False
+
+        # mphとkm/hを含む
+        self.speed = (spd_knt, spd_knt * 1.151, spd_knt * 1.852)
+        self.course = course
+        return True
+
+    def gpgga(self):
+        """グローバルポジショニングシステム固定データ（GGA）文を解析。UTCタイムスタンプ、緯度、経度、
+        固定状態、使用中の衛星数、水平精度劣化（HDOP）、高度、ジオイド高、固定状態を更新"""
+
+        try:
+            # UTCタイムスタンプ
+            utc_string = self.gps_segments[1]
+
+            # 受信機がまだタイムスタンプを持っていない場合はスキップ
+            if utc_string:
+                hours = (int(utc_string[0:2]) + self.local_offset) % 24
+                minutes = int(utc_string[2:4])
+                seconds = float(utc_string[4:])
+            else:
+                hours = 0
+                minutes = 0
+                seconds = 0.0
+
+            # 使用中の衛星数
+            satellites_in_use = int(self.gps_segments[7])
+
+            # 固定状態の取得
+            fix_stat = int(self.gps_segments[6])
+
+        except (ValueError, IndexError):
+            return False
+
+        try:
+            # 水平精度劣化（HDOP）
+            hdop = float(self.gps_segments[8])
+        except (ValueError, IndexError):
+            hdop = 0.0
+
+        # 固定が良好な場合、位置と速度データを処理
+        if fix_stat:
+
+            # 経度/緯度の解析
+            try:
+                # 緯度
+                l_string = self.gps_segments[2]
+                lat_degs = int(l_string[0:2])
+                lat_mins = float(l_string[2:])
+                lat_hemi = self.gps_segments[3]
+
+                # 経度
+                l_string = self.gps_segments[4]
+                lon_degs = int(l_string[0:3])
+                lon_mins = float(l_string[3:])
+                lon_hemi = self.gps_segments[5]
+            except ValueError:
+                return False
+
+            if lat_hemi not in self.__HEMISPHERES:
+                return False
+
+            if lon_hemi not in self.__HEMISPHERES:
+                return False
+
+            # 高度/ジオイド高
+            try:
+                altitude = float(self.gps_segments[9])
+                geoid_height = float(self.gps_segments[11])
+            except ValueError:
+                altitude = 0
+                geoid_height = 0
+
+            # オブジェクトデータの更新
+            [lat_degs, lat_mins, lat_hemi]
+            self._longitude = [lon_degs, lon_mins, lon_hemi]
+            self.altitude = altitude
+            self.geoid_height = geoid_height
+
+        # オブジェクトデータの更新
+        self.timestamp = [hours, minutes, seconds]
+        self.satellites_in_use = satellites_in_use
+        self.hdop = hdop
+        self.fix_stat = fix_stat
+
+        # 固定が良好な場合、固定タイムスタンプを更新
+        if fix_stat:
+            self.new_fix_time()
+
+        return True
+
+    def gpgsa(self):
+        """GNSS DOPとアクティブ衛星（GSA）文を解析。GPS固定タイプ、固定計算に使用される衛星のリスト、
+        位置精度劣化（PDOP）、水平精度劣化（HDOP）、垂直精度劣化（VDOP）、固定状態を更新"""
+
+        # 固定タイプ（なし、2Dまたは3D）
+        try:
+            fix_type = int(self.gps_segments[2])
+        except ValueError:
+            return False
+       # 使用されるPRN衛星番号を取得（最大12個）
+        sats_used = []
+        for sats in range(12):
+            sat_number_str = self.gps_segments[3 + sats]
+            if sat_number_str:
+                try:
+                    sat_number = int(sat_number_str)
+                    sats_used.append(sat_number)
+                except ValueError:
+                    return False
+            else:
+                break
+
+        # PDOP、HDOP、VDOPの取得
+        try:
+            pdop = float(self.gps_segments[15])
+            hdop = float(self.gps_segments[16])
+            vdop = float(self.gps_segments[17])
+        except ValueError:
+            return False
+
+        # オブジェクトデータの更新
+        self.fix_type = fix_type
+
+        # 固定が良好な場合、固定タイムスタンプを更新
+        if fix_type > self.__NO_FIX:
+            self.new_fix_time()
+
+        self.satellites_used = sats_used
+        self.hdop = hdop
+        self.vdop = vdop
+        self.pdop = pdop
+
+        return True
+
+    def gpgsv(self):
+        """視界内の衛星（GSV）文を解析。SV文の数、最後に解析されたSV文の数、および文内の各衛星のデータを更新"""
+        try:
+            num_sv_sentences = int(self.gps_segments[1])
+            current_sv_sentence = int(self.gps_segments[2])
+            sats_in_view = int(self.gps_segments[3])
+        except ValueError:
+            return False
+
+        # この文内のすべての衛星データを格納するための空の辞書を作成
+        satellite_dict = dict()
+
+        # 読み取る衛星の数を計算し、読み取るセグメント位置の数を決定
+        if num_sv_sentences == current_sv_sentence:
+            # 最後の文には1〜4個の衛星が含まれる可能性があるため、5〜20の位置を読み取る
+            sat_segment_limit = (sats_in_view - ((num_sv_sentences - 1) * 4)) * 5
+        else:
+            # 非最後の文には4個の衛星が含まれているため、位置20まで読み取る
+            sat_segment_limit = 20
+
+        # 文内の最大4個の衛星データを取得
+        for sats in range(4, sat_segment_limit, 4):
+
+            # PRNが存在する場合、衛星データを取得
+            if self.gps_segments[sats]:
+                try:
+                    sat_id = int(self.gps_segments[sats])
+                except (ValueError, IndexError):
+                    return False
+
+                try:  # 追跡していない場合、仰角はnull（値なし）になる可能性がある
+                    elevation = int(self.gps_segments[sats + 1])
+                except (ValueError, IndexError):
+                    elevation = None
+
+                try:  # 追跡していない場合、方位角はnull（値なし）になる可能性がある
+                    azimuth = int(self.gps_segments[sats + 2])
+                except (ValueError, IndexError):
+                    azimuth = None
+
+                try:  # 追跡していない場合、SNRはnull（値なし）になる可能性がある
+                    snr = int(self.gps_segments[sats + 3])
+                except (ValueError, IndexError):
+                    snr = None
+            # PRNが見つからない場合、文にはこれ以上の衛星が含まれていない
+            else:
+                break
+
+            # 文の辞書に衛星データを追加
+            satellite_dict[sat_id] = (elevation, azimuth, snr)
+
+        # オブジェクトデータの更新
+        self.total_sv_sentences = num_sv_sentences
+        self.last_sv_sentence = current_sv_sentence
+        self.satellites_in_view = sats_in_view
+
+        # 新しい文のセットの場合、既存の衛星データをクリアするか、追加のSV文が解析されると更新する
+        if current_sv_sentence == 1:
+            self.satellite_data = satellite_dict
+        else:
+            self.satellite_data.update(satellite_dict)
+
+        return True
+
+    ##########################################
+    # データストリームハンドラ関数
+    ##########################################
+
+    def new_sentence(self):
+        """新しい文の準備のためにオブジェクトフラグを調整"""
+        self.gps_segments = ['']
+        self.active_segment = 0
+        self.crc_xor = 0
+        self.sentence_active = True
+        self.process_crc = True
+        self.char_count = 0
+
+    def update(self, new_char):
+        """新しい入力文字を処理し、特定の文字（'$', ',', '*'）に基づいて必要に応じてGPSオブジェクトを更新
+        関数は受信した文字列のリストを構築し、CRCによって検証され、適切な文関数によって解析されます。
+        成功した解析の場合は文のタイプを返し、それ以外の場合はNoneを返します"""
+
+        valid_sentence = False
+
+        # 新しい文字が印刷可能な文字であることを確認
+        ascii_char = ord(new_char)
+
+        if 10 <= ascii_char <= 126:
+            self.char_count += 1
+
+            # ログファイルが有効な場合、文字を書き込む
+            if self.log_en:
+                self.write_log(new_char)
+
+            # 新しい文字列が始まっているかどうかを確認（$）
+            if new_char == '$':
+                self.new_sentence()
+                return None
+
+            elif self.sentence_active:
+
+                # 文が終了しているかどうかを確認（*）
+                if new_char == '*':
+                    self.process_crc = False
+                    self.active_segment += 1
+                    self.gps_segments.append('')
+                    return None
+
+                # セクションが終了しているかどうかを確認（,）、新しいサブ文字列を作成して文字をフィード
+                elif new_char == ',':
+                    self.active_segment += 1
+                    self.gps_segments.append('')
+
+                # 他のすべての印刷可能な文字を格納し、CRCを確認
+                else:
+                    self.gps_segments[self.active_segment] += new_char
+
+                    # CRC入力が無効な場合、文はほぼ完了
+                    if not self.process_crc:
+
+                        if len(self.gps_segments[self.active_segment]) == 2:
+                            try:
+                                final_crc = int(self.gps_segments[self.active_segment], 16)
+                                if self.crc_xor == final_crc:
+                                    valid_sentence = True
+                                else:
+                                    self.crc_fails += 1
+                            except ValueError:
+                                pass  # CRC値が変形しており、正しいはずがない
+
+                # CRCの更新
+               _char
+
+                # 有効な文が受信され、サポートされている文である場合、それを解析
+                if valid_sentence:
+                    self.clean_sentences += 1  # 受信したクリーンな文をインクリメント
+                    self.sentence_active = False  # アクティブな処理フラグをクリア
+
+                    if self.gps_segments[0] in self.supported_sentences:
+
+                        # メッセージタイプに基づいて文を解析し、解析がクリーンであればTrueを返す
+                        if self.supported_sentences[self.gps_segments[0]](self):
+
+                            # ホストにGPSオブジェクトが更新されたことを知らせるために解析された文のタイプを返す
+                            self.parsed_sentences += 1
+                            return self.gps_segments[0]
+
+                # 文が完了するのを待っている間にバッファがゴミでいっぱいになっていないか確認
+                if self.char_count > self.SENTENCE_LIMIT:
+                    self.sentence_active = False
+
+        # ホストに新しい文が解析されなかったことを知らせる
+        return None
+
+    def new_fix_time(self):
+        """固定が更新されたときに現在の時間で高解像度カウンタを更新。現在はGGA、GSA、RMC文からのみトリガーされる"""
+        try:
+            self.fix_time = utime.ticks_ms()
+        except NameError:
+            self.fix_time = time.time()
+
+    #########################################
+    # ユーザーヘルパー関数
+    # これらの関数はGPSオブジェクトデータの操作を容易にする
+    #########################################
+
+    def satellite_data_updated(self):
+        """
+        すべてのGSV文が読み取られ、衛星データが完全であるかどうかを確認
+        :return: boolean
+        """
+        if self.total_sv_sentences > 0 and self.total_sv_sentences == self.last_sv_sentence:
+            return True
+        else:
+            return False
+
+    def unset_satellite_data_updated(self):
+        """
+          def unset_satellite_data_updated(self):
+        """
+        GSV文が読み取られたことを示し、データが使用され、将来の更新が新鮮であることを示す
+        """
+        self.last_sv_sentence = 0
+
+    def satellites_visible(self):
+        """
+        受信機に現在見えている衛星のPRNのリストを返す
+        :return: list
+        """
+        return list(self.satellite_data.keys())
+
+    def time_since_fix(self):
+        """最後に有効な固定が解析されてからのミリ秒数を返す。固定が見つからない場合は0を返す"""
+
+        # 固定が見つかったかどうかをテスト
+        if self.fix_time == 0:
+            return -1
+
+        # utimeを使用して固定時間を計算しようとする; MicroPythonを実行していない場合
+        # time.time()は秒単位の浮動小数点値を返す
+        try:
+            current = utime.ticks_diff(utime.ticks_ms(), self.fix_time)
+        except NameError:
+            current = (time.time() - self.fix_time) * 1000  # ミリ秒
+
+        return current
+
+    def compass_direction(self):
+        """
+        現在のコースに基づいて方位または中間方位を決定する
+        :return: string
+        """
+        # 回転したコンパスのオフセットを計算
+        if self.course >= 348.75:
+            offset_course = 360 - self.course
+        else:
+            offset_course = self.course + 11.25
+
+        # 各コンパスポイントは22.5度ずつ離れているため、割ってルックアップ値を見つける
+        dir_index = floor(offset_course / 22.5)
+
+        final_dir = self.__DIRECTIONS[dir_index]
+
+        return final_dir
+
+    def latitude_string(self):
+        """
+        現在の緯度データの読みやすい文字列を作成
+        :return: string
+        """
+        if self.coord_format == 'dd':
+            formatted_latitude = self.latitude
+            lat_string = str(formatted_latitude[0]) + '° ' + str(self._latitude[2])
+        elif self.coord_format == 'dms':
+            formatted_latitude = self.latitude
+            lat_string = str(formatted_latitude[0]) + '° ' + str(formatted_latitude[1]) + "' " + str(formatted_latitude[2]) + '" ' + str(formatted_latitude[3])
+        else:
+            lat_string = str(self._latitude[0]) + '° ' + str(self._latitude[1]) + "' " + str(self._latitude[2])
+        return lat_string
+
+    def longitude_string(self):
+        """
+        現在の経度データの読みやすい文字列を作成
+        :return: string
+        """
+        if self.coord_format == 'dd':
+            formatted_longitude = self.longitude
+            lon_string = str(formatted_longitude[0]) + '° ' + str(self._longitude[2])
+        elif self.coord_format == 'dms':
+            formatted_longitude = self.longitude
+            lon_string = str(formatted_longitude[0]) knot'
+            else:
+                unit_str = ' knots'
+            speed_string = str(self.speed[0]) + unit_str
+
+        else:
+            speed_string = str(self.speed[2]) + ' km/h'
+
+        return speed_string
+
+    def date_string(self, formatting='s_mdy', century='20'):
+        """
+        現在の日付の読みやすい文字列を作成
+        長い形式: January 1st, 2014
+        または2つの短い形式:
+        11/01/2014 (MM/DD/YYYY)
+        01/11/2014 (DD/MM/YYYY)
+        :param formatting: 's_mdy', 's_dmy', 'long'のいずれかの文字列
+        :param century: GPSデータが属する世紀を示す整数（19は19XX、20は20XX）
+        :return: date_string  長いまたは短い形式の日付文字列
+        """
+
+        # 長い形式 January 1st, 2014
+        if formatting == 'long':
+            # プライベートセットから月の文字列を取得
+            month = self.__MONTHS[self.date[1] - 1]
+
+            # 日付の接尾辞を決定
+            if self.date[0] in (1, 21, 31):
+                suffix = 'st'
+            elif self.date[0] in (2, 22):
+                suffix = 'nd'
+            elif self.date[0] == (3, 23):
+               rd'
+            else:
+                suffix = 'th'
+
+            day = str(self.date[0]) + suffix  # 日付文字列を作成
+
+            year = century + str(self.date[2])  # 年の文字列を作成
+
+            date_string = month + ' ' + day + ', ' + year  # すべてをまとめる
+
+        else:
+            # 必要に応じて日付文字列に先行ゼロを追加
+            if self.date[0] < 10:
+                day = '0' + str(self.date[0])
+            else:
+                day = str(self.date[0])
+
+            # 必要に応じて月の文字列に先行ゼロを追加
+            if self.date[1] < 10:
+                month = '0' + str(self.date[1])
+            else:
+                month = str(self.date[1])
+
+            # 必要に応じて年の文字列に先行ゼロを追加
+            if self.date[2] < 10:
+                year = '0' + str(self.date[2])
+            else:
+                year = str(self.date[2])
+
+            # 希望の形式に基づいて最終文字列を構築
+            if formatting == 's_dmy':
+                date_string = day + '/' + month + '/' + year
+
+            else:  # デフォルトの日付形式
+                date_string = month + '/' + day + '/' + year
+
+        csv.print('gnss_time', f'{century}{year}-{month}-{day}T{self.timestamp[0]}:{self.timestamp[1]}:{self.timestamp[2]}Z')  # 測定値を記録
+        return date_string
+
+    # 現在サポートされているすべてのNMEA文
+    supported_sentences = {'GPRMC': gprmc, 'GLRMC': gprmc,
+                           'GPGGA': gpgga, 'GLGGA': gpgga,
+                           'GPVTG': gpvtg, 'GLVTG': gpvtg,
+                           'GPGSA': gpgsa, 'GLGGPGLL': gpgll, 'GLGLL': gpgll,
+                           'GNGGA': gpgga, 'GNRMC': gprmc,
+                           'GNVTG': gpvtg, 'GNGLL': gpgll,
+                           'GNGSA': gpgsa,
+                          }
+
+if __name__ == "__main__":
+    pass
+        
