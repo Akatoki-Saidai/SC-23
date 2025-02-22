@@ -107,6 +107,30 @@ def compensate_H(adc_H):
         var_h = 0.0
     print("hum : %6.2f ％" % (var_h))
 
+def get_altitude(self, qnh=1013.25, manual_temperature=None):
+    # qnh = pressure at sea level where the readings are being taken.
+    # The temperature should be the outdoor temperature.
+    # Use the manual_temperature variable if temperature adjustments are required.
+    temperature, pressure = self.get_temp_pres()
+    if manual_temperature is not None:
+        temperature = manual_temperature
+    # altitude = ((pow((qnh / pressure), (1.0 / 5.257)) - 1) * (temperature + 273.15)) / 0.0065
+    altitude = (((1 - (pow((pressure / qnh), 0.190284))) * 145366.45) / 0.3048 ) / 10
+    print('alt', altitude)
+    return altitude
+    
+def get_baseline(self):
+    baseline_values = []
+    baseline_size = 100
+
+    for i in range(baseline_size):
+        _, pressure = self.compensate_P()
+        baseline_values.append(pressure)
+        time.sleep(0.1)
+    baseline = sum(baseline_values[:-25]) / len(baseline_values[:-25])
+    print('alt_base_press', baseline)
+    return baseline
+
 def setup():
     osrs_t = 1
     osrs_p = 1
@@ -123,6 +147,8 @@ def setup():
     writeReg(0xF2, ctrl_hum_reg)
     writeReg(0xF4, ctrl_meas_reg)
     writeReg(0xF5, config_reg)
+
+
 
 setup()
 get_calib_param()
