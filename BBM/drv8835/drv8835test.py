@@ -75,6 +75,10 @@ def main():
         motor_right.value = 0.0
 
     return
+GPIO.output(PIN_AIN1, GPIO.LOW)
+GPIO.output(PIN_AIN2, GPIO.LOW)
+GPIO.output(PIN_BIN1, GPIO.LOW)
+GPIO.output(PIN_BIN2, GPIO.LOW)
 
 if __name__ == "__main__":
     main()
