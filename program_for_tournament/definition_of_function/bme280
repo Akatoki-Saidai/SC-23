@@ -3,7 +3,7 @@ import smbus
 import time
 #import RPi.GPIO as GPIO  # RPi.GPIO モジュールのインポート
 
-class BNO055:
+class BME280:
     # GPIOの設定
     #GPIO.setmode(GPIO.BCM)  # GPIO番号をBCMモードで指定
     #GPIO.setup(2, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # SDAピン (GPIO2)
