@@ -25,7 +25,7 @@ except ImportError:
 
 
 # 測定値の出力用
-import csv_print as csv
+import print as csv
 
 
 class MicropyGPS(object):
