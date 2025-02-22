@@ -1,0 +1,13 @@
+
+
+
+
+time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_time,date,lat,lon,alt,alt_base_press,goal_lat,goal_lon,temp,press,camera_area,camera_order,camera_center_x,camera_center_y,camera_frame_size_x,camera_frame_size_y,motor_l,motor_r,goal_relative_x,goal_relative_y,goal_relative_angle_rad,goal_distance,accel_all_x,accel_all_y,accel_all_z,accel_line_x,accel_line_y,accel_line_z,mag_x,mag_y,mag_z,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,euler_x,euler_y,euler_z,nmea
+"36213.410668006","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","6",,,,"ここに保存したいデータ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.41092314","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","22",,,,"データタイプ「msg」は最も基本的なメッセージを記録したいとき使います",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.410997411","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","23",,,,"9軸セットアップ完了",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.411086751","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","24",,,,"上の行みたいにつかいましょう",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.41121814","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","26",,"エラーメッセージを記録すんのに使う",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.411298212","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","27","深刻なエラーのとき使う，先輩はセンサーのセットアップ失敗したときに使ってた",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.411361752","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","31",,,,,,,,,,,"12.54",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"36213.41143444","/home/yuta/club/akatoki/SC-23/program/csv/main.py","main","36",,,,,,,,,,,,,,,,,,,,,,,,,,,,,"12","8","9.8",,,,,,,,,,,,,,,,
