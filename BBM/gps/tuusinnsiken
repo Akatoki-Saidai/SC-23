@@ -1,0 +1,10 @@
+import serial
+
+try:
+    ser = serial.Serial('/dev/ttyS0', 9600, timeout=1)
+    while True:
+        line = ser.readline().decode('utf-8').rstrip()
+        if line:
+            print(line)
+except serial.SerialException as e:
+    print(f"SerialException: {e}")
