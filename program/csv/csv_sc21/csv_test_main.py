@@ -4,8 +4,8 @@ import make_csv
 
 def main():
 
-    make_csv.print("Log","aaaaa")
-    make_csv.print("Log","bbbbbbb")
+    make_csv.print("msg","aaaaa")
+    make_csv.print("msg","bbbbbbb")
     return
 
 
