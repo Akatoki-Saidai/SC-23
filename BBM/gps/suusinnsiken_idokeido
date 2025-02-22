@@ -1,0 +1,19 @@
+import re
+
+# サンプルデータ（実際のGPSデータをここに置き換えてください）
+data = """
+$GPGGA,123519,3551.6851,N,13936.3628,E,1,08,0.9,545.4,M,46.9,M,,*47
+$GPGGA,123520,3552.1234,N,13937.5678,E,1,08,0.9,545.4,M,46.9,M,,*48
+"""
+
+# NとEの値を抽出する正規表現パターン
+pattern = re.compile(r',(\d+\.\d+),N,(\d+\.\d+),E')
+
+# パターンにマッチする部分を抽出
+matches = pattern.findall(data)
+
+# 実数型に変換して表示
+for match in matches:
+    n_value = float(match[0])
+    e_value = float(match[1])
+    print(f'N: {n_value}, E: {e_value}')
