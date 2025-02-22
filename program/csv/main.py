@@ -39,6 +39,7 @@ def main():
 
 
     #このコードを実行してできたやつをgithubにおいとくね
+    #log.csvってやつがそれ
 
 if __name__ == "__main__":
 	main()
