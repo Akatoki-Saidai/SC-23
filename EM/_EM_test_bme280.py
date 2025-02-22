@@ -32,6 +32,7 @@ def main():
         print("baseline: ", baseline)
         # csv.print('alt_base_press', baseline)
         first_altitude = bmp.get_altitude(qnh=baseline)
+
         #csv.print('msg', f'first_altitude: {first_altitude}')
 
     except Exception as e:
