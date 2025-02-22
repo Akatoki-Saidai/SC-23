@@ -1,3 +1,16 @@
+    try:
+        PIN_AIN1 = 12
+        PIN_AIN2 = 16
+        PIN_BIN1 = 33
+        PIN_BIN2 = 18
+
+        motor_right, motor_left = motor.setup(PIN_AIN1, PIN_AIN2, PIN_BIN1, PIN_BIN2)
+
+    except Exception as e:
+        print(f"An error occured in setting motor_driver: {e}")
+        csv.print('serious_error', f"An error occured in setting motor_driver: {e}")
+        led_red.blink(0.5, 0.5, 10, 0)
+
 import time
 from gpiozero import Motor
 from gpiozero.pins.pigpio import PiGPIOFactory
@@ -28,10 +41,10 @@ def setup(AIN1, AIN2, BIN1, BIN2):
                         backward=dcm_pins["right_backward"],
                         pin_factory=factory)
     
-    return right, left
+    return right, left#returnをすることで他の関数でもこの値を使うことができる。
 
 
-def accel(right, left):#加速
+def accel(right, left):
     csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -47,7 +60,7 @@ def accel(right, left):#加速
     csv.print('msg', 'motor: accel')
 
 
-def brake(right, left):#減速
+def brake(right, left):
     power_r = float(right.value)
     power_l = float(left.value)
 
@@ -76,7 +89,7 @@ def brake(right, left):#減速
     csv.print('msg', 'motor: brake')
 
 
-def leftturn(right, left):#左に旋回
+def leftturn(right, left):
     
     right.value = 0
     left.value = 0
@@ -111,7 +124,7 @@ def leftturn(right, left):#左に旋回
 
 
 
-def rightturn(right, left):#右に旋回
+def rightturn(right, left):
     
     right.value = 0
     left.value = 0
@@ -147,7 +160,7 @@ def rightturn(right, left):#右に旋回
 
 
 
-def rightonly(right, left):#右の車輪のみ回す()
+def rightonly(right, left):
     
     right.value = 0
     left.value = 0
@@ -178,7 +191,7 @@ def rightonly(right, left):#右の車輪のみ回す()
 
 
 
-def leftonly(right, left):#左の車輪のみ回す
+def leftonly(right, left):
     
     right.value = 0
     left.value = 0
@@ -334,3 +347,18 @@ def left_angle(bno, angle_deg, right, left):
         right.value, left.value = 1 - i*delta_power, -1 + i*delta_power
     right.value , left.value = 0, 0
     csv.print('motor', [left.value, right.value])
+#ここからは未知(2025年2月22日)
+def retreat(right, left):
+    csv.print('motor', [0, 0])
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if 0<=power<=1:
+                right.value = -power
+        left.value = -power
+        power += delta_power
+
+    right.value = -1
+    left.value = -1
+
+    csv.print('motor', [-1, -1])
+    csv.print('msg', 'motor: accel')
