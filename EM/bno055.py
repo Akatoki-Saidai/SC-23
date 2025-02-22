@@ -288,6 +288,9 @@ class BNO055:
 	def getVector(self, vectorType):
 		buf = self.readBytes(vectorType, 6)
 		xyz = struct.unpack('hhh', struct.pack('BBBBBB', buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]))
+
+		xyz_m = [xyz[0],xyz[1],xyz[2]]
+
 		if vectorType == BNO055.VECTOR_MAGNETOMETER:
 			scalingFactor = 16.0
 			result_vector = [i/scalingFactor for i in xyz_m]
