@@ -1,4 +1,5 @@
     try:
+        # GPIOピン番号ではなく、普通のピン番号
         PIN_AIN1 = 12
         PIN_AIN2 = 16
         PIN_BIN1 = 33
