@@ -5,8 +5,6 @@ from time import sleep
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 import time
-from gpiozero import Motor
-from gpiozero.pins.pigpio import PiGPIOFactory
 import random
 import numpy as np
 
