@@ -82,6 +82,8 @@ GPIO.output(PIN_BIN2, GPIO.LOW)
 
 if __name__ == "__main__":
     main()
+motor_left.value=0
+motor_right.value=0
 """
 プログラム終了後にモーターが勝手に動いてしまう現象は、
 factory.close()
