@@ -4,6 +4,19 @@ from gpiozero import Motor
 from time import sleep
 from gpiozero.pins.pigpio import PiGPIOFactory
 
+import time
+from gpiozero import Motor
+from gpiozero.pins.pigpio import PiGPIOFactory
+import random
+import numpy as np
+
+# 制御量の出力用
+import make_csv as csv
+
+from bno055 import BNO055
+
+delta_power = 0.20
+
 # DCモータのピン設定
 PIN_AIN1 = 18
 PIN_AIN2 = 23
@@ -102,35 +115,31 @@ if __name__ == "__main__":
 
 
 
+    try:
+        # GPIOピン番号ではなく、普通のピン番号
+        PIN_AIN1 = 18#12
+        PIN_AIN2 = 23#16
+        PIN_BIN1 = 24#33
+        PIN_BIN2 = 13#18
+
+        motor_right, motor_left = motor.setup(PIN_AIN1, PIN_AIN2, PIN_BIN1, PIN_BIN2)
+
+    except Exception as e:
+        print(f"An error occured in setting motor_driver: {e}")
+        csv.print('serious_error', f"An error occured in setting motor_driver: {e}")
+        # led_red.blink(0.5, 0.5, 10, 0)
 
 
 
+def setup(AIN1, AIN2, BIN1, BIN2):
 
+    dcm_pins = {
+                "left_forward": BIN2,
+                "left_backward": BIN1,
+                "right_forward": AIN1,
+                "right_backward": AIN2,
+            }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import time
-from gpiozero import Motor
-from gpiozero.pins.pigpio import PiGPIOFactory
-import random
-import numpy as np
-
-# 制御量の出力用
-import make_csv as csv
-
-from bno055 import BNO055
 
 # GPIOピン番号ではなく、普通のラズパイピン番号
 PIN_AIN1 = 18#12
@@ -234,7 +243,7 @@ def leftturn(right, left):
     left.value = -1
     csv.print('motor', [-1, 1])
 
-    time.sleep(0.5 + random.random()/2)
+    time.sleep(0.5 + random.random()/2)##### 実験で決定 #####
 
     for i in range(int(1 / delta_power)):
         if (-1 <= power <= 1):
@@ -269,7 +278,7 @@ def rightturn(right, left):
     left.value = 1
     csv.print('motor', [1, -1])
 
-    time.sleep(0.5 + random.random()/2)
+    time.sleep(0.5 + random.random()/2)##### 実験で決定 #####
 
     for i in range(int(1 / delta_power)):
         if (-1 <= power <= 1):
@@ -493,10 +502,27 @@ def retreat(right, left):
     csv.print('msg', 'motor: accel')
 
 def stop():
-	motor_left.value = 0.0
-	motor_right.value = 0.0
+    motor_left.value = 0.0
+    motor_right.value = 0.0
+    time.sleep(1)
 
+
+print("retreat")
 retreat(motor_right,motor_left)
 time.sleep(2)
 stop()
 
+print("accel")
+accel(motor_right,motor_left)
+time.sleep(2)
+stop()
+
+print("rightturn")
+rightturn(motor_right,motor_left)
+stop()
+
+print("leftturn")
+leftturn(motor_right,motor_left)
+stop()
+
+print("Finish!!!!!!!!!!")
