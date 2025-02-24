@@ -93,6 +93,30 @@ class BME280:
         temperature = self.t_fine / 5120.0
         print("temp : %-6.2f ℃" % (temperature))
         return temperature
+
+    def get_altitude(self, qnh=1013.25, manual_temperature=None):
+        # qnh = pressure at sea level where the readings are being taken.
+        # The temperature should be the outdoor temperature.
+        # Use the manual_temperature variable if temperature adjustments are required.
+        temperature, pressure = self.compensate_P()
+        if manual_temperature is not None:
+            temperature = manual_temperature
+        # altitude = ((pow((qnh / pressure), (1.0 / 5.257)) - 1) * (temperature + 273.15)) / 0.0065
+        altitude = (((1 - (pow((pressure / qnh), 0.190284))) * 145366.45) / 0.3048 ) / 10
+        print('alt', altitude)
+        return altitude
+        
+    def get_baseline(self):
+        baseline_values = []
+        baseline_size = 100
+    
+        for i in range(baseline_size):
+            _, pressure = self.compensate_P()
+            baseline_values.append(pressure)
+            time.sleep(0.1)
+        baseline = sum(baseline_values[:-25]) / len(baseline_values[:-25])
+        print('alt_base_press', baseline)
+        return baseline
     
     # センサーの設定を行う関数
     def setup(self):
