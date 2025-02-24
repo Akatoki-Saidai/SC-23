@@ -1,6 +1,7 @@
 import smbus
 import time
 from bme280 import BME280
+import make_csv
 
 def main():
   #bme280のセットアップ
@@ -14,10 +15,10 @@ def main():
                 bme.compensate_P()
             except Exception as e:
                 print(f"An error occurred during empty measurement in BMP: {e}")
-                #csv.print('msg', f"An error occurred during empty measurement in BMP: {e}")      
+                make_csv.print('msg', f"An error occurred during empty measurement in BMP: {e}")      
     except Exception as e:
         print(f"An error occured in setting bmp object: {e}")
-        #csv.print('serious_error', f"An error occured in setting bmp280 object: {e}")
+        make_csv.print('serious_error', f"An error occured in setting bmp280 object: {e}")
         #led_red.blink(0.5, 0.5, 10, 0)
   
     
@@ -30,13 +31,13 @@ def main():
     try:
         baseline = bmp.get_baseline()
         print("baseline: ", baseline)
-        # csv.print('alt_base_press', baseline)
+        make_csv.print('alt_base_press', baseline)
         first_altitude = bmp.get_altitude(qnh=baseline)
-	print('msg', f'first_altitude: {first_altitude}')
+	make_csv.print('msg', f'first_altitude: {first_altitude}')
 
     except Exception as e:
         print(f"An error occured in getting bmp data: {e}")
-        #csv.print('serious_error', f"An error occured in getting bmp280 data: {e}")
+        make_csv.print('serious_error', f"An error occured in getting bmp280 data: {e}")
         #led_red.blink(0.5, 0.5, 10, 0)
 
 # メイン関数
