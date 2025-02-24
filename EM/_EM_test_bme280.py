@@ -1,6 +1,6 @@
 import smbus
 import time
-from bme280 import BME280
+from bme280 csv import BME280
 import make_csv
 
 def main():
