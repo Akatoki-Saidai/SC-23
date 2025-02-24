@@ -3,6 +3,14 @@ import time
 from bme280 csv import BME280
 import make_csv
 
+# 気圧を読み取る関数
+def read_pressure(self):
+    data = []
+    for i in range(0xF7, 0xF7 + 8):
+        data.append(self.bus.read_byte_data(self.i2c_address, i))
+    pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
+    return self.compensate_P(pres_raw)
+
 def main():
   #bme280のセットアップ
   try:
