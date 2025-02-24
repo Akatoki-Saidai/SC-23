@@ -115,6 +115,7 @@ def compensate_H(adc_H):
 	print("hum : %6.2f ％" % (var_h))
 
 
+
 def setup():
 	osrs_t = 1			#Temperature oversampling x 1
 	osrs_p = 1			#Pressure oversampling x 1
