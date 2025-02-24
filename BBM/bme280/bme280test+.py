@@ -135,6 +135,19 @@ def altitude(pressure):
     altitude = (((1 - (pow((pressure / p0), 0.190284))) * 145366.45) / 0.3048 ) / 10
     print("altitude : %6.2f" % (altitude))
 
+def baseline(pressure):
+    baseline_values = []
+    baseline_size = 100
+
+    for i in range(baseline_size):
+        #_, pressure = self.get_temp_pres()
+        baseline_values.append(pressure)
+        time.sleep(0.1)
+    baseline = sum(baseline_values[:-25]) / len(baseline_values[:-25])
+    
+    print('alt_base_press', baseline)
+       
+
 def setup():
     osrs_t = 1            # Temperature oversampling x 1
     osrs_p = 1            # Pressure oversampling x 1
@@ -176,5 +189,6 @@ if __name__ == '__main__':
         pres_raw = readData()  # readData関数でpres_rawを受け取る
         pressure = compensate_P(pres_raw)  # pres_rawを渡して補正
         altitude(pressure)  # 高度計算を行う
+        baseline(pressure)
     except KeyboardInterrupt:
         pass
