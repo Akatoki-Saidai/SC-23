@@ -149,7 +149,8 @@ class BME280:
         self.writeReg(0xF4, ctrl_meas_reg)
         self.writeReg(0xF5, config_reg)
 
-
+    setup()
+    get_calib_param()
 
     if __name__ == '__main__':
         try:
