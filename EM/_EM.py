@@ -1,6 +1,7 @@
 import time
 import smbus
 import RPi.GPIO as GPIO
+import make_csv
 
 from bme280 import BME280Sensor
 from bno055 import BNO055
@@ -22,6 +23,7 @@ def main():
 
         data = bme.read_data()  # ここでデータを取得
         pressure = bme.compensate_P(data)  # 気圧を補正して取得
+        make_csv.print("alt_base_press",pressure)
         baseline = bme.baseline(pressure)
     except Exception as e:
         print(f"An error occured in setting bme object: {e}")
