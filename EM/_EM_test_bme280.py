@@ -1,45 +1,55 @@
 import smbus
 import time
-from bme280 import BME280
+from bme280em3 import BME280Sensor
 
-def main():
-  #bme280のセットアップ
-  try:
-        bus = smbus.SMBus(1)
-        bme = BME280(i2c_dev=bus)
+try:
+    bus = smbus.SMBus(1)
+    bme = BME280Sensor(bus_number=1)
 
-        # 初めは異常値が出てくるので，空測定
-        for i in range(10):
-            try:
-                bme.compensate_P()
-            except Exception as e:
-                print(f"An error occurred during empty measurement in BMP: {e}")
-                #csv.print('msg', f"An error occurred during empty measurement in BMP: {e}")      
-    except Exception as e:
-        print(f"An error occured in setting bmp object: {e}")
-        #csv.print('serious_error', f"An error occured in setting bmp280 object: {e}")
-        #led_red.blink(0.5, 0.5, 10, 0)
-  
+    # 初めは異常値が出てくるので，空測定
+    for i in range(10):
+        try:
+            bme.read_data()
+        except Exception as e:
+            print(f"An error occurred during empty measurement in BME: {e}")
+            print('msg', f"An error occurred during empty measurement in BME: {e}")      
+except Exception as e:
+    print(f"An error occured in setting bme object: {e}")
+    print('serious_error', f"An error occured in setting bme280 object: {e}")
+    #led_red.blink(0.5, 0.5, 10, 0)
+
+# bmp280高度算出用基準気圧取得
+try:
+    print(5)
+    data = bme.read_data()  # ここでデータを取得
+    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+    baseline = bme.baseline(pressure)
+    print(6)
+    print("baseline: ", baseline)
+    print(7)
+    print('alt_base_press', baseline)
+    first_altitude = bme.altitude(pressure)
+    print(8)
+    print('msg', f'first_altitude: {first_altitude}')
+    print(9)
+    time.sleep(1)
+    print(5)
+    time.sleep(1)
+    print(4)
+    time.sleep(1)
+    print(3)
+    time.sleep(1)
+    print(2)
+    time.sleep(1)
+    print(1)
+    time.sleep(1)
+    data = bme.read_data()  # ここでデータを取得
+    print(0)
+    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+    print(0)
+    print("alt: ", bme.altitude(pressure, qnh=baseline))
     
-  
-
-
-
-      
-     # bme280高度算出用基準気圧取得
-    try:
-        baseline = bmp.get_baseline()
-        print("baseline: ", baseline)
-        # csv.print('alt_base_press', baseline)
-        first_altitude = bmp.get_altitude(qnh=baseline)
-	print('msg', f'first_altitude: {first_altitude}')
-
-    except Exception as e:
-        print(f"An error occured in getting bmp data: {e}")
-        #csv.print('serious_error', f"An error occured in getting bmp280 data: {e}")
-        #led_red.blink(0.5, 0.5, 10, 0)
-
-# メイン関数
-# 備考:main()に投げるだけ
-if __name__ == "__main__":
-	main()
+    
+except Exception as e:
+    print(f"An error occured in getting bme data: {e}")
+    print('serious_error', f"An error occured in getting bme280 data: {e}")
