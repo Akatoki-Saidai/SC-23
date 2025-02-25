@@ -1,6 +1,6 @@
 import smbus
 import time
-from bme280em3 import BME280Sensor
+from bme280 import BME280Sensor
 
 try:
     bus = smbus.SMBus(1)
