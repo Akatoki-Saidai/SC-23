@@ -138,9 +138,11 @@ def main():
     
     #温湿度気圧センサー
     try:
-        data = bme.read_data()  # ここでデータを取得
-        pressure = bme.compensate_P(data)  # 気圧を補正して取得
-        print("alt: ", bme.altitude(pressure, qnh=baseline))#初期高度に対する相対高度出力
+        while True:
+            data = bme.read_data()  # ここでデータを取得
+            pressure = bme.compensate_P(data)  # 気圧を補正して取得
+            print("alt: ", bme.altitude(pressure, qnh=baseline))#初期高度に対する相対高度出力
+            time.sleep(1)
     except Exception as e:
         print(f"An error occurred in setting : {e}")
 
