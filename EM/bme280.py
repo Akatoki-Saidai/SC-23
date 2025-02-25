@@ -4,7 +4,7 @@
 import smbus
 import time
 
-bus_number  = 1
+bus_number = 1
 i2c_address = 0x76
 
 bus = smbus.SMBus(bus_number)
@@ -19,13 +19,14 @@ t_fine = 0.0
 def writeReg(reg_address, data):
     bus.write_byte_data(i2c_address, reg_address, data)
 
+
 def get_calib_param():
     calib = []
 
-    for i in range(0x88, 0x88+24):
+    for i in range(0x88, 0x88 + 24):
         calib.append(bus.read_byte_data(i2c_address, i))
     calib.append(bus.read_byte_data(i2c_address, 0xA1))
-    for i in range(0xE1, 0xE1+7):
+    for i in range(0xE1, 0xE1 + 7):
         calib.append(bus.read_byte_data(i2c_address, i))
 
     digT.append((calib[1] << 8) | calib[0])
@@ -57,7 +58,7 @@ def get_calib_param():
 
     for i in range(0, 6):
         if digH[i] & 0x8000:
-            digH[i] = (-digH[i] ^ 0xFFFF) + 1  
+            digH[i] = (-digH[i] ^ 0xFFFF) + 1
 
 def readData():
     data = []
@@ -70,6 +71,9 @@ def readData():
     compensate_T(temp_raw)
     compensate_P(pres_raw)
     compensate_H(hum_raw)
+    
+    return pres_raw  # ここでpres_rawを返す
+
 
 def compensate_P(adc_P):
     global t_fine
@@ -98,6 +102,7 @@ def compensate_P(adc_P):
     print("pressure : %7.2f hPa" % (pressure / 100))
     return pressure / 100
 
+
 def compensate_T(adc_T):
     global t_fine
     v1 = (adc_T / 16384.0 - digT[0] / 1024.0) * digT[1]
@@ -105,6 +110,7 @@ def compensate_T(adc_T):
     t_fine = v1 + v2
     temperature = t_fine / 5120.0
     print("temp : %-6.2f ℃" % (temperature))
+
 
 def compensate_H(adc_H):
     global t_fine
@@ -120,74 +126,49 @@ def compensate_H(adc_H):
         var_h = 0.0
     print("hum : %6.2f ％" % (var_h))
 
-def altitude(pressure):
-    """
-    気圧から高度を計算する関数
-    Args:
-        pressure (float): 気圧 (Pa)
-    Returns:
-        float: 高度 (m)
-    """
-    p0 = 101325.0  # 海面更生気圧 (Pa)
-    a1 = 1.0 / 5.255 - 1.0 # 定数
 
-    # 高度計算式
-    altitude = (((1 - (pow((pressure / p0), 0.190284))) * 145366.45) / 0.3048 ) / 10
+def altitude(pressure):
+    p0 = 101325.0  # 海面更生気圧 (Pa)
+    a1 = 1.0 / 5.255 - 1.0  # 定数
+
+    altitude = (((1 - (pow((pressure / p0), 0.190284))) * 145366.45) / 0.3048) / 10
     print("altitude : %6.2f" % (altitude))
+
 
 def baseline(pressure):
     baseline_values = []
     baseline_size = 100
 
     for i in range(baseline_size):
-        #_, pressure = self.get_temp_pres()
         baseline_values.append(pressure)
         time.sleep(0.1)
     baseline = sum(baseline_values[:-25]) / len(baseline_values[:-25])
-    
+
     print('alt_base_press', baseline)
-       
+
 
 def setup():
     osrs_t = 1            # Temperature oversampling x 1
     osrs_p = 1            # Pressure oversampling x 1
     osrs_h = 1            # Humidity oversampling x 1
-    mode   = 3            # Normal mode
-    t_sb   = 5            # Tstandby 1000ms
+    mode = 3              # Normal mode
+    t_sb = 5              # Tstandby 1000ms
     filter = 0            # Filter off
     spi3w_en = 0          # 3-wire SPI Disable
 
     ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | mode
-    config_reg    = (t_sb << 5) | (filter << 2) | spi3w_en
-    ctrl_hum_reg  = osrs_h
+    config_reg = (t_sb << 5) | (filter << 2) | spi3w_en
+    ctrl_hum_reg = osrs_h
 
     writeReg(0xF2, ctrl_hum_reg)
     writeReg(0xF4, ctrl_meas_reg)
     writeReg(0xF5, config_reg)
 
 
+# 関数呼び出し
 setup()
 get_calib_param()
-
-def readData():
-    data = []
-    for i in range(0xF7, 0xF7+8):
-        data.append(bus.read_byte_data(i2c_address, i))
-    pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
-    temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
-    hum_raw  = (data[6] << 8)  |  data[7]
-
-    compensate_T(temp_raw)
-    compensate_P(pres_raw)
-    compensate_H(hum_raw)
-
-    return pres_raw  # ここでpres_rawを返す
-
-def returndate():
-    try:
-        pres_raw = readData()  # readData関数でpres_rawを受け取る
-        pressure = compensate_P(pres_raw)  # pres_rawを渡して補正
-        altitude(pressure)  # 高度計算を行う
-        baseline(pressure)
-    except KeyboardInterrupt:
-        pass
+data = readData()  # pres_rawを取得する
+pressure = compensate_P(data)  # 気圧補正
+altitude(pressure)  # 高度計算
+baseline(pressure)  # ベースライン計算
