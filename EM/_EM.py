@@ -1,9 +1,31 @@
 import time
+import smbus
+from bme280 import BME280Sensor
 
 from bno055 import BNO055
 
 def main():
 
+    #温湿度気圧のセットアップ
+    try:
+        bus = smbus.SMBus(1)
+        bme = BME280Sensor(bus_number=1)
+
+    # 初めは異常値が出てくるので，空測定
+        for i in range(10):
+            try:
+                bme.read_data()
+            except Exception as e:
+                print(f"An error occurred during empty measurement in BME: {e}")
+                print('msg', f"An error occurred during empty measurement in BME: {e}")
+
+        data = bme.read_data()  # ここでデータを取得
+        pressure = bme.compensate_P(data)  # 気圧を補正して取得
+        baseline = bme.baseline(pressure)
+    except Exception as e:
+        print(f"An error occured in setting bme object: {e}")
+        print('serious_error', f"An error occured in setting bme280 object: {e}")
+    #led_red.blink(0.5, 0.5, 10, 0)
 
     #9軸のセットアップ
     try:
@@ -110,6 +132,15 @@ def main():
 #コードの置き場
 #自作関数を他のスクリプトで作った人はとりあえずこのスクリプトで呼び出す方法をここにメモして
 ##########################################################
+
+    try:
+        data = bme.read_data()  # ここでデータを取得
+        pressure = bme.compensate_P(data)  # 気圧を補正して取得
+        print("alt: ", bme.altitude(pressure, qnh=baseline))#初期高度に対する相対高度出力
+    except Exception as e:
+        print(f"An error occurred in setting : {e}")
+
+
 
     #9軸の値を取得してprint(サンプルコード)
     try:

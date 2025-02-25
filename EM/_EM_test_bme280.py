@@ -13,6 +13,7 @@ try:
         except Exception as e:
             print(f"An error occurred during empty measurement in BME: {e}")
             print('msg', f"An error occurred during empty measurement in BME: {e}")      
+    
 except Exception as e:
     print(f"An error occured in setting bme object: {e}")
     print('serious_error', f"An error occured in setting bme280 object: {e}")
