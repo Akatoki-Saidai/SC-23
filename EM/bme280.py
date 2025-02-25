@@ -128,7 +128,7 @@ def compensate_H(adc_H):
 
 
 def altitude(pressure):
-    p0 = 101325.0  # 海面更生気圧 (Pa)
+    p0 = baseline(pressure) # 海面更生気圧 (Pa)
     a1 = 1.0 / 5.255 - 1.0  # 定数
 
     altitude = (((1 - (pow((pressure / p0), 0.190284))) * 145366.45) / 0.3048) / 10
@@ -144,7 +144,8 @@ def baseline(pressure):
         time.sleep(0.1)
     baseline = sum(baseline_values[:-25]) / len(baseline_values[:-25])
 
-    print('alt_base_press', baseline)
+    # print('alt_base_press', baseline)
+    return baseline
 
 
 def setup():
@@ -171,4 +172,4 @@ get_calib_param()
 data = readData()  # pres_rawを取得する
 pressure = compensate_P(data)  # 気圧補正
 altitude(pressure)  # 高度計算
-baseline(pressure)  # ベースライン計算
+print('alt_base_press', baseline(pressure))  # ベースライン計算
