@@ -1,16 +1,15 @@
 import smbus
 import time
-from bme280em2 import BME280
-import make_csv
+from bme280em3 import BME280Sensor
 
 try:
         bus = smbus.SMBus(1)
-        bme = BME280(i2c_dev=bus)
+        bme = BME280Sensor(i2c_dev=bus)
 
         # 初めは異常値が出てくるので，空測定
         for i in range(10):
             try:
-                bme.readData(pres_raw)
+                bme.read_data()
             except Exception as e:
                 print(f"An error occurred during empty measurement in BME: {e}")
                 csv.print('msg', f"An error occurred during empty measurement in BME: {e}")      
