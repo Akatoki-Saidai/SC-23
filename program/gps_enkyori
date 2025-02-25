@@ -20,7 +20,7 @@ earth_radius = 6378137
 # 緯度1度あたりの距離 (メートル) はほぼ一定 (緯度1度あたりの距離（メートル）はほぼ一定です)
 latitude_to_meters = earth_radius * (math.pi / 180) 
 
-# ... (EN_deg, EN_min, EN_sec functions remain the same) ...
+# ... (EN_deg, EN_min, EN_sec 関数はそのまま) ...
 
 
 def calculate_distance_and_angle(current_E, current_N):
