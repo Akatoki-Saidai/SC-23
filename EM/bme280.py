@@ -3,6 +3,7 @@
 
 import smbus
 import time
+import make_csv
 
 bus_number = 1
 i2c_address = 0x76
@@ -99,7 +100,7 @@ def compensate_P(adc_P):
     v2 = ((pressure / 4.0) * digP[7]) / 8192.0
     pressure = pressure + ((v1 + v2 + digP[6]) / 16.0)
 
-    print("pressure : %7.2f hPa" % (pressure / 100))
+    make_csv.print("pressure : %7.2f hPa" % (pressure / 100))
     return pressure / 100
 
 
@@ -132,7 +133,7 @@ def altitude(pressure):
     a1 = 1.0 / 5.255 - 1.0  # 定数
 
     altitude = (((1 - (pow((pressure / p0), 0.190284))) * 145366.45) / 0.3048) / 10
-    print("altitude : %6.2f" % (altitude))
+    make_csv.print("altitude : %6.2f" % (altitude))
 
 
 def baseline(pressure):
@@ -172,4 +173,4 @@ get_calib_param()
 data = readData()  # pres_rawを取得する
 pressure = compensate_P(data)  # 気圧補正
 altitude(pressure)  # 高度計算
-print('alt_base_press', baseline(pressure))  # ベースライン計算
+make_csv.print('alt_base_press', baseline(pressure))  # ベースライン計算
