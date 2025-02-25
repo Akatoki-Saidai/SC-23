@@ -70,7 +70,7 @@ def calculate_distance_and_angle(current_lat, current_lon):
         return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
-        return 100, 360
+        return 100, math.pi * 2
 
 
 # 初期位置をスタート地点に設定
