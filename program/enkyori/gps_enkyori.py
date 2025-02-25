@@ -8,6 +8,8 @@ import pyproj
 # FutureWarningを抑制
 warnings.filterwarnings("ignore", category=FutureWarning)
 
+# モータを起動させたときの機体の回転速度ω[rad/s]
+omega = 0.5  # rad/s
 
 # WGS84楕円体のパラメータを定義
 # a: 長半径 (メートル)
@@ -80,26 +82,30 @@ while True:
     # 距離と角度を計算
     distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon)
 
+    # 距離と角度の情報を表示 (変更箇所)
     print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
     print("theta_for_goal(rad):", angle_to_goal)
-    print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
-
-    # ゴールに到達したらループを抜ける
-    if distance_to_goal < 10:  # 10メートル以内になったら近距離フェーズに入る
-        print("近距離フェーズ突入！")
-        break
-
+    print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°") 
+    
     # 進行方向を決定
     if angle_to_goal > 0:
         print("進行方向に対して左方向にゴールがあります")
-        # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
+        # ゴールへの角度に比例した時間だけ左回転
+        rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
+        # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5)) 
+        # ... (replace with your motor control function) ...
+        time.sleep(rotation_time)  # 計算された時間だけ回転
+        # ... (stop motor) ...
     else:
         print("進行方向に対して右方向にゴールがあります")
+        # ゴールへの角度に比例した時間だけ右回転
+        rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
         # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
+        # ... (replace with your motor control function) ...
+        time.sleep(rotation_time)  # 計算された時間だけ回転
+        # ... (stop motor) ...
 
-    # 前進する処理をここに記述 (例: motor(0.5, 0.5))
-    # 前進後の位置を更新 (例: current_lat += ..., current_lon += ...)
-    # 適切な前進距離と位置更新ロジックを実装する必要があります
+    # ... (rest of the navigation loop) ...
 
     # 一時停止 (デバッグ用)
     time.sleep(1)
