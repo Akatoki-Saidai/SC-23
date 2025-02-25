@@ -13,79 +13,81 @@ goal_N = 3586.1311223522975/100
 start_E = 12581.494394894224/100
 start_N = 3907.5796567290304/100
 
-# ... (EN_deg, EN_min, EN_sec functions remain the same) ...
-
-# 前進方向取得
-# 前進  (前に進む)
-# accel(motor_right, motor_left)  # モーターを制御してロボットを前進させる（想定）
-# time.sleep(1)  # 1秒間実行
-# stop()  # モーターを停止
-
-# 現在地取得 (現在の位置を取得する)
-# 帰らざる橋 (もう後戻りできない地点)
-loc_E = 12667.059769185065/100
-loc_N = 3795.612199883298/100
-
-# 移動距離計算 (移動した距離を計算する)
-# スタート地点から現在地までの距離を計算する（想定）:
-delta_E = loc_E - start_E
-delta_N = loc_N - start_N
-
-# --- 緯度経度差をメートルに変換 (緯度と経度の差をメートルに変換する) ---
 # 地球の半径 (メートル)
 earth_radius = 6378137
 
 # 緯度経度差をメートルに変換 (緯度と経度の差をメートルに変換する)
 # 緯度1度あたりの距離 (メートル) はほぼ一定 (緯度1度あたりの距離（メートル）はほぼ一定です)
 latitude_to_meters = earth_radius * (math.pi / 180) 
-# 経度1度あたりの距離 (メートル) は緯度によって変化する (経度1度あたりの距離（メートル）は緯度によって変化します)
-longitude_to_meters = earth_radius * (math.pi / 180) * (math.cos(math.radians(start_N)))  # スタート地点の緯度を使用
 
-delta_E_meters = delta_E * longitude_to_meters
-delta_N_meters = delta_N * latitude_to_meters
-# --- ここまで ---
-
-print("delta_E:", delta_E)
-print("delta_N:", delta_N)
-print("delta_E_meters:", delta_E_meters)  # メートル単位で出力
-print("delta_N_meters:", delta_N_meters)  # メートル単位で出力
-distance_start_loc = math.sqrt(delta_E_meters**2 + delta_N_meters**2)
-print("スタート地点から現在地までの距離:", distance_start_loc, "メートル")
-
-# スタート地点からゴール地点までの距離を計算
-delta_E_start_goal = goal_E - start_E
-delta_N_start_goal = goal_N - start_N
-
-delta_E_meters_start_goal = delta_E_start_goal * longitude_to_meters
-delta_N_meters_start_goal = delta_N_start_goal * latitude_to_meters
-
-distance_start_goal = math.sqrt(delta_E_meters_start_goal**2 + delta_N_meters_start_goal**2)
-
-print("スタート地点からゴール地点までの距離:", distance_start_goal, "メートル")
-
-# 移動後の地点からゴール地点までの距離を計算
-delta_E_loc_goal = goal_E - loc_E
-delta_N_loc_goal = goal_N - loc_N
-
-delta_E_meters_loc_goal = delta_E_loc_goal * longitude_to_meters
-delta_N_meters_loc_goal = delta_N_loc_goal * latitude_to_meters
-
-distance_loc_goal = math.sqrt(delta_E_meters_loc_goal**2 + delta_N_meters_loc_goal**2)
-
-print("現在地からゴール地点までの距離:", distance_loc_goal, "メートル")
-
-theta_for_goal = math.pi - math.acos((distance_start_loc ** 2 + distance_loc_goal ** 2 - distance_start_goal ** 2)/(2 * distance_start_loc * distance_loc_goal))
-print("theta_for_goal(rad):", theta_for_goal)
-print("theta_for_goal°:", str(theta_for_goal * 180 / math.pi) + "°")
+# ... (EN_deg, EN_min, EN_sec functions remain the same) ...
 
 
-# 恐らくここでwhile文を挟む必要がある。
-if(distance_loc_goal >= 10):
-    if(theta_for_goal > 0):
+def calculate_distance_and_angle(current_E, current_N):
+    """現在地からゴールまでの距離と角度を計算する関数"""
+
+    # 経度1度あたりの距離 (メートル) は緯度によって変化する (経度1度あたりの距離（メートル）は緯度によって変化します)
+    longitude_to_meters = earth_radius * (math.pi / 180) * (math.cos(math.radians(start_N)))  # スタート地点の緯度を使用
+    
+    # スタート地点から現在地までの距離を計算する
+    delta_E = current_E - start_E
+    delta_N = current_N - start_N
+    delta_E_meters = delta_E * longitude_to_meters
+    delta_N_meters = delta_N * latitude_to_meters
+    distance_start_loc = math.sqrt(delta_E_meters**2 + delta_N_meters**2)
+
+    # スタート地点からゴール地点までの距離を計算
+    delta_E_start_goal = goal_E - start_E
+    delta_N_start_goal = goal_N - start_N
+    delta_E_meters_start_goal = delta_E_start_goal * longitude_to_meters
+    delta_N_meters_start_goal = delta_N_start_goal * latitude_to_meters
+    distance_start_goal = math.sqrt(delta_E_meters_start_goal**2 + delta_N_meters_start_goal**2)
+
+    # 現在地からゴール地点までの距離を計算
+    delta_E_loc_goal = goal_E - current_E
+    delta_N_loc_goal = goal_N - current_N
+    delta_E_meters_loc_goal = delta_E_loc_goal * longitude_to_meters
+    delta_N_meters_loc_goal = delta_N_loc_goal * latitude_to_meters
+    distance_loc_goal = math.sqrt(delta_E_meters_loc_goal**2 + delta_N_meters_loc_goal**2)
+
+    # ゴールへの方向を計算 (ラジアン)
+    try:
+        theta_for_goal = math.pi - math.acos((distance_start_loc ** 2 + distance_loc_goal ** 2 - distance_start_goal ** 2) / (2 * distance_start_loc * distance_loc_goal))
+        return distance_loc_goal, theta_for_goal
+    except:
+        print("division by zero")
+        return 100, 0
+
+
+# 初期位置をスタート地点に設定
+current_E = start_E
+current_N = start_N
+
+# ゴールに到達するまで繰り返す
+while True:
+    # 距離と角度を計算
+    distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_E, current_N)
+
+    print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
+    print("theta_for_goal(rad):", angle_to_goal)
+    print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
+
+    # ゴールに到達したらループを抜ける
+    if distance_to_goal < 10:  # 10メートル以内になったら近距離フェーズに入る
+        print("近距離フェーズ突入！")
+        break
+
+    # 進行方向を決定
+    if angle_to_goal > 0:
         print("進行方向に対して左方向にゴールがあります")
-    #     print("左に回転") # 左に回転する
+        # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
     else:
         print("進行方向に対して右方向にゴールがあります")
-    #     print("右に回転") # 右に回転する
-else:
-    phase = 4 # 近距離フェーズ
+        # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
+
+    # 前進する処理をここに記述 (例: motor(0.5, 0.5))
+    # 前進後の位置を更新 (例: current_E += ..., current_N += ...)
+    # 適切な前進距離と位置更新ロジックを実装する必要があります
+    
+    # 一時停止 (デバッグ用)
+    time.sleep(1)
