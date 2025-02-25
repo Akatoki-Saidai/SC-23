@@ -51,14 +51,17 @@ def main():
             if(phase==0):
 
                 try:
-
-
+		    
+		    data = bme.read_data()  # ここでデータを取得
+            	    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+            	    alt_1 = bme.altitude(pressure, qnh=baseline)
+			
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
 
                     #落下検知の要件に高度が10m以上上昇したか？を追加予定
-                    if(accel_z < -5.0):
-                        phase = 1 #下向き加速度が5.0m/s^2を超えたら落下検知
+                    if(accel_z < -5.0) and (alt_1 >= 10):
+                        phase = 1 #下向き加速度が5.0m/s^2を超え,かつ高度が10m以上上昇したら落下検知
 
                 except Exception as e:
                     print(f" An error occurred in phase0 : {e}")
@@ -69,11 +72,16 @@ def main():
 
             if(phase==1):
                 try:
+			
+		    data = bme.read_data()  # ここでデータを取得
+            	    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+            	    alt_2 = bme.altitude(pressure, qnh=baseline)
+			
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
 
                     #落下終了検知の要件に高度が基準高度であるか？加速度変化がないか？を追加予定
-                    if(accel_z > -0.5): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
+                    if(accel_z > -0.5) and (alt_2 <= 0.1): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
                         phase = 2
                 except Exception as e:
                     print(f" An error occurred in phase1 : {e}")
