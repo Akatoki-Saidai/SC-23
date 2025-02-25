@@ -1,7 +1,8 @@
 import time
 import smbus
-from bme280 import BME280Sensor
+import RPi.GPIO as GPIO
 
+from bme280 import BME280Sensor
 from bno055 import BNO055
 
 def main():
@@ -132,7 +133,8 @@ def main():
 #コードの置き場
 #自作関数を他のスクリプトで作った人はとりあえずこのスクリプトで呼び出す方法をここにメモして
 ##########################################################
-
+    
+    #温湿度気圧センサー
     try:
         data = bme.read_data()  # ここでデータを取得
         pressure = bme.compensate_P(data)  # 気圧を補正して取得
@@ -156,6 +158,16 @@ def main():
     except Exception as e:
          print(f"An error occurred in print bno055 date: {e}")
     return
+
+    #ニクロム線を切ります
+    #使うpin番号
+    pin = 16
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin,1)
+    #電流を送る時間
+    time.sleep(5)
+    GPIO.output(pin,0)
 
 ############################################
 #ここより下は消さない
