@@ -70,7 +70,7 @@ def calculate_distance_and_angle(current_lat, current_lon):
         return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
-        return 100, 0
+        return 100, 360
 
 
 # 初期位置をスタート地点に設定
@@ -86,7 +86,7 @@ while True:
     print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
     print("theta_for_goal(rad):", angle_to_goal)
     print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°") 
-    
+
     # 進行方向を決定
     if angle_to_goal > 0:
         print("進行方向に対して左方向にゴールがあります")
@@ -106,6 +106,9 @@ while True:
         # ... (stop motor) ...
 
     # ... (rest of the navigation loop) ...
-
+    if distance_to_goal < 10:  # 10メートル以内になったら近距離フェーズに入る
+        print("近距離フェーズに移行")
+        break
+    
     # 一時停止 (デバッグ用)
     time.sleep(1)
