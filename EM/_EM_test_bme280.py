@@ -1,51 +1,55 @@
 import smbus
 import time
-from bme280em2 import BME280
-import make_csv
+from bme280em3 import BME280Sensor
 
-class BME280_Extended(BME280):
-    # 圧力を取得するメソッドをクラス内に定義
-    def read_pressure(self):
-        data = []
-        # 圧力データの取得
-        for i in range(0xF7, 0xF7 + 3):  # 3バイトのみを取得
-            data.append(self.bus.read_byte_data(self.i2c_address, i))
-        if len(data) < 3:
-            raise ValueError("Failed to read enough pressure data")
-        pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
-        return self.compensate_P(pres_raw)
+try:
+    bus = smbus.SMBus(1)
+    bme = BME280Sensor(bus_number=1)
 
-def main():
-    try:
-        bus = smbus.SMBus(1)
-        bme = BME280_Extended()  # BME280_Extendedインスタンスを作成
-        bme.i2c_dev = bus   # I2Cデバイスを設定
+    # 初めは異常値が出てくるので，空測定
+    for i in range(10):
+        try:
+            bme.read_data()
+        except Exception as e:
+            print(f"An error occurred during empty measurement in BME: {e}")
+            print('msg', f"An error occurred during empty measurement in BME: {e}")      
+except Exception as e:
+    print(f"An error occured in setting bme object: {e}")
+    print('serious_error', f"An error occured in setting bme280 object: {e}")
+    #led_red.blink(0.5, 0.5, 10, 0)
 
-        # 初めは異常値が出てくるので、空測定
-        for i in range(10):
-            try:
-                # 圧力を取得
-                pressure = bme.read_pressure()
-                if pressure is None:
-                    raise ValueError("Failed to get valid sensor data")
-                print(f"Pressure: {pressure}")
-            except Exception as e:
-                print(f"An error occurred during empty measurement in BME: {e}")
-                make_csv.print('msg', f"An error occurred during empty measurement in BME: {e}")
-      
-    except Exception as e:
-        print(f"An error occurred in setting BME object: {e}")
-        make_csv.print('serious_error', f"An error occurred in setting BME280 object: {e}")
+# bmp280高度算出用基準気圧取得
+try:
+    print(5)
+    data = bme.read_data()  # ここでデータを取得
+    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+    baseline = bme.baseline(pressure)
+    print(6)
+    print("baseline: ", baseline)
+    print(7)
+    print('alt_base_press', baseline)
+    first_altitude = bme.altitude(pressure)
+    print(8)
+    print('msg', f'first_altitude: {first_altitude}')
+    print(9)
+    time.sleep(1)
+    print(5)
+    time.sleep(1)
+    print(4)
+    time.sleep(1)
+    print(3)
+    time.sleep(1)
+    print(2)
+    time.sleep(1)
+    print(1)
+    time.sleep(1)
+    data = bme.read_data()  # ここでデータを取得
+    print(0)
+    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+    print(0)
+    print("alt: ", bme.altitude(pressure, qnh=baseline))
     
-    # BME280高度算出用基準気圧取得
-    try:
-        # 高度取得
-        first_altitude = bme.get_altitude()  # bmeを使用して高度を取得
-        make_csv.print('msg', f'first_altitude: {first_altitude}')
-    except Exception as e:
-        print(f"An error occurred in getting BME data: {e}")
-        make_csv.print('serious_error', f"An error occurred in getting BME280 data: {e}")
-
-# メイン関数
-if __name__ == "__main__":
-    main()
+    
+except Exception as e:
+    print(f"An error occured in getting bme data: {e}")
+    print('serious_error', f"An error occured in getting bme280 data: {e}")
