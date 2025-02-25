@@ -118,7 +118,7 @@ class BME280Sensor:
         v2 = ((pressure / 4.0) * self.digP[7]) / 8192.0
         pressure = pressure + ((v1 + v2 + self.digP[6]) / 16.0)
 
-        make_csv.print("pressure : %7.2f hPa" % (pressure / 100))
+        print("pressure : %7.2f hPa" % (pressure / 100))
         return pressure / 100
 
     def compensate_T(self, adc_T):
@@ -146,8 +146,8 @@ class BME280Sensor:
     def altitude(self, pressure, qnh = 1013.25):
         #p0 = self.baseline(pressure)  # 海面更生気圧 (Pa)
         altitude = (((1 - (pow((pressure / qnh), 0.190284))) * 145366.45) / 0.3048) / 10  #p0
-        make_csv.print("altitude : %f" % (altitude))
-        #6.2
+        print("altitude : %6.2f" % (altitude))
+        make_csv.print("alt",altitude)
         return altitude
 
     def baseline(self, pressure):
@@ -167,4 +167,4 @@ sensor = BME280Sensor()
 data = sensor.read_data()  # pres_rawを取得する
 pressure = sensor.compensate_P(data)  # 気圧補正
 sensor.altitude(pressure)  # 高度計算
-make_csv.print('alt_base_press', sensor.baseline(pressure))  # ベースライン計算
+print('alt_base_press', sensor.baseline(pressure))  # ベースライン計算
