@@ -1,3 +1,4 @@
+#気圧のみ
 import time
 import smbus
 import RPi.GPIO as GPIO
