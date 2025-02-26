@@ -1,3 +1,5 @@
+# mada mo-ta ya 9jikuwo mochiita sutakkukenchi nadono dousaha kaiteimasen
+
 import serial
 import time
 import math
@@ -136,8 +138,8 @@ while True:
     current_lat = get_latitude()
     current_lon = get_longitude()
 
-    # ゴールの10 m以内に到達したらループを抜ける
-    if distance_to_goal <= 10:  # 10メートル以内になったら近距離フェーズに入る
+    # ゴールの10 m以内に到達したらループを抜け近距離フェーズへ
+    if distance_to_goal <= 10:
         print("近距離フェーズに移行")
         break
 
