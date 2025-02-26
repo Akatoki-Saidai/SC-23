@@ -127,7 +127,7 @@ class BME280Sensor:
         v2 = (adc_T / 131072.0 - self.digT[0] / 8192.0) * (adc_T / 131072.0 - self.digT[0] / 8192.0) * self.digT[2]
         t_fine = v1 + v2
         temperature = t_fine / 5120.0
-        print("temp : %-6.2f ℃" % (temperature))
+        #print("temp : %-6.2f ℃" % (temperature))
 
     def compensate_H(self, adc_H):
         global t_fine
@@ -141,7 +141,7 @@ class BME280Sensor:
             var_h = 100.0
         elif var_h < 0.0:
             var_h = 0.0
-        print("hum : %6.2f ％" % (var_h))
+        #print("hum : %6.2f ％" % (var_h))
 
     def altitude(self, pressure, qnh = 1013.25):
         #p0 = self.baseline(pressure)  # 海面更生気圧 (Pa)
