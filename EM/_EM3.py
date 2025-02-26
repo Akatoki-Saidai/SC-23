@@ -22,6 +22,7 @@ def main():
 
         data = bme.read_data()  # ここでデータを取得
         pressure = bme.compensate_P(data)  # 気圧を補正して取得
+        temperature=bme.compensate_T(data)  # 温度補正
         make_csv.print("alt_base_press", pressure)
         baseline = bme.baseline(pressure)
     except Exception as e:
@@ -50,8 +51,9 @@ def main():
                 try:
                     data = bme.read_data()  # ここでデータを取得
                     pressure = bme.compensate_P(data)  # 気圧を補正して取得
+                    temperature=bme.compensate_T(data)  # 温度補正
                     time.sleep(1.0)
-                    alt_1 = bme.altitude(pressure, qnh=baseline)
+                    alt_1 = bme.altitude(pressure, temperature, qnh=baseline)
 
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
@@ -73,8 +75,9 @@ def main():
                 try:
                     data = bme.read_data()  # ここでデータを取得
                     pressure = bme.compensate_P(data)  # 気圧を補正して取得
+                    temperature=sensor.compensate_T(data)  # 温度補正
                     time.sleep(1.0)
-                    alt_2 = bme.altitude(pressure, qnh=baseline)
+                    alt_2 = bme.altitude(pressure, temperature, qnh=baseline)
 
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
