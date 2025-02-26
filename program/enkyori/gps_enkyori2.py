@@ -1,5 +1,3 @@
-# mada mo-ta ya 9jikuwo mochiita sutakkukenchi nadono dousaha kaiteimasen
-
 import serial
 import time
 import math
@@ -52,8 +50,8 @@ def calculate_distance_and_angle(current_lat, current_lon, previous_lat, previou
     current_x, current_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)
 
     # 前回の現在地（スタート地点）の緯度経度をメートルに変換
-    previous_x, previous_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), previous_lon, previous_lat)  
-    
+    previous_x, previous_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), previous_lon, previous_lat)
+
     # ゴール地点の緯度経度をメートルに変換
     goal_x, goal_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), goal_lon, goal_lat)
 
@@ -103,18 +101,31 @@ wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
 current_lat = get_latitude()
 current_lon = get_longitude()
 
+# 移動していない判定のカウンター
+no_movement_count = 0
+
 # ゴールの10 m以内に到達するまで繰り返す
 while True:
     # 前回の現在地を保存
     previous_lat = current_lat
     previous_lon = current_lon
-    
+
     print(current_lat, current_lon)  # 現在位置
 
     # 距離と角度を計算し、表示
     distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon, previous_lat, previous_lon)
     print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
     print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
+
+    # 移動していない判定
+    if distance_to_goal == 2323232323:  # calculate_distance_and_angle関数で移動していないと判定された場合
+        no_movement_count += 1
+        print("移動していない判定:", no_movement_count, "回")
+        if no_movement_count >= 10:
+            print("移動していない判定が10回に達しました。強制的に近距離フェーズに移行します。")
+            break  # whileループを抜けて近距離フェーズに移行
+    else:
+        no_movement_count = 0  # 移動が検出されたらカウンターをリセット
 
     # 進行方向を決定
     if angle_to_goal > 0:
