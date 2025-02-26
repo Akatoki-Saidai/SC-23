@@ -1,3 +1,4 @@
+#pressure and temperature
 import smbus
 import time
 import make_csv
