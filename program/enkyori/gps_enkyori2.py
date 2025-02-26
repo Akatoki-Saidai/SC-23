@@ -7,7 +7,7 @@ import pyproj
 """緯度を取得する関数（値が取得できるまで無限ループ）"""
 def get_latitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
-    print("緯度取得開始")
+    # print("緯度取得開始")
 
     while True:
         line = ser.readline().decode('utf-8').strip()
@@ -17,7 +17,7 @@ def get_latitude():
                 if len(parts) >= 7 and int(parts[6]) > 0:
                     latitude = float(parts[2]) / 100
                     ser.close()
-                    print("緯度取得完了")
+                    # print("緯度取得完了")
                     return latitude
                     break
             except:
@@ -27,7 +27,7 @@ def get_latitude():
 """経度を取得する関数（値が取得できるまで無限ループ）"""
 def get_longitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
-    print("経度取得開始")
+    # print("経度取得開始")
 
     while True:
         line = ser.readline().decode('utf-8').strip()
@@ -37,12 +37,12 @@ def get_longitude():
                 if len(parts) >= 7 and int(parts[6]) > 0:
                     longitude = float(parts[4]) / 100
                     ser.close()
-                    print("経度取得完了")
+                    # print("経度取得完了")
                     return longitude
                     break
             except:
                 pass  # 例外処理を追加しました。
-        time.sleep(0.1)
+        time.sleep(0.01)
 
 
 # FutureWarningを抑制
@@ -67,10 +67,6 @@ f = (a - b) / a
 goal_lat = 30.374896924724634  # 緯度
 goal_lon = 130.95764140244341  # 経度
 
-
-
-
-
 # pyprojを使ってWGS84楕円体に基づく投影を定義
 # Proj('+proj=latlong +ellps=WGS84') は、
 # 緯度経度を扱うための投影を指定しています。
@@ -87,23 +83,24 @@ def calculate_distance_and_angle(current_lat, current_lon):
     current_x, current_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)
 
     # スタート地点とゴール地点の緯度経度をメートルに変換
-    start_x, start_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), start_lon, start_lat)
+    # start_lat, start_lon を current_lat, current_lon に置き換えています。
+    current_x_start, current_y_start = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)  
     goal_x, goal_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), goal_lon, goal_lat)
 
-    # スタート地点から現在地までの距離を計算する
-    distance_start_loc = math.sqrt((current_x - start_x)**2 + (current_y - start_y)**2)
+    # スタート地点（現在地）から現在地までの距離を計算する
+    distance_current_loc = math.sqrt((current_x - current_x_start)**2 + (current_y - current_y_start)**2)
 
-    # スタート地点からゴール地点までの距離を計算
-    distance_start_goal = math.sqrt((goal_x - start_x)**2 + (goal_y - start_y)**2)
+    # スタート地点（現在地）からゴール地点までの距離を計算
+    distance_current_goal = math.sqrt((goal_x - current_x_start)**2 + (goal_y - current_y_start)**2)
 
     # 現在地からゴール地点までの距離を計算
     distance_loc_goal = math.sqrt((goal_x - current_x)**2 + (goal_y - current_y)**2)
 
     # ゴールへの方向を計算 (ラジアン)
-    # ゴール地点、現在地、スタート地点を結ぶ三角形において、
+    # ゴール地点、現在地、スタート地点（現在地）を結ぶ三角形において、
     # 現在地における角度 (theta_for_goal) を余弦定理を用いて計算しています。
     try:
-        theta_for_goal = math.pi - math.acos((distance_start_loc ** 2 + distance_loc_goal ** 2 - distance_start_goal ** 2) / (2 * distance_start_loc * distance_loc_goal))
+        theta_for_goal = math.pi - math.acos((distance_current_loc ** 2 + distance_loc_goal ** 2 - distance_current_goal ** 2) / (2 * distance_current_loc * distance_loc_goal))
         return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
