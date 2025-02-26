@@ -8,8 +8,8 @@ import motor               # モーター制御モジュール（仮）
 import RPi.GPIO as GPIO
 # BCM(GPIO番号)で指定する設定
 GPIO.setmode(GPIO.BCM)
-# GPIO17を出力モード設定
-GPIO.setup(17, GPIO.OUT)
+# GPIO5を出力モード設定
+GPIO.setup(5, GPIO.OUT)
 
 # BNO055 初期化
 bno = BNO055()
@@ -37,8 +37,13 @@ def check_stuck():
 
         # スタック検知時の処理
         if is_stacking:
-            # GPIO17の出力を1にして、LED点灯
-            GPIO.output(17, 1)
+            # GPIO5の出力を1にして、LED点灯
+            for i in range(0,2):
+                GPIO.output(5,1)
+                time.sleep(0.5)
+                GPIO.output(5,0)
+                time.sleep(0.5)
+            GPIO.output(5, 1)
         
             print("Stacking detected!")
             make_csv.print("warning", "Stacking detected!")
@@ -57,6 +62,8 @@ def check_stuck():
 
             # GPIO17の出力を0にして、LED消灯
             GPIO.output(17, 0)
+
+            time.sleep(1)
 
     except Exception as e:
         print(f"An error occurred in stack check: {e}")
