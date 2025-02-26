@@ -20,9 +20,9 @@ def main():
                 print(f"An error occurred during empty measurement in BME: {e}")
                 print('msg', f"An error occurred during empty measurement in BME: {e}")
 
-        data = bme.read_data()  # ここでデータを取得
-        pressure = bme.compensate_P(data)  # 気圧を補正して取得
-        temperature=bme.compensate_T(data)  # 温度補正
+        temp_raw, pres_raw = bme.read_data()  # ここでデータを取得
+        pressure = bme.compensate_P(pres_raw)  # 気圧を補正して取得
+        temperature=bme.compensate_T(temp_raw)  # 温度補正
         make_csv.print("alt_base_press", pressure)
         baseline = bme.baseline(pressure)
     except Exception as e:
@@ -49,9 +49,9 @@ def main():
             # ************************************************** #
             if(phase == 0):
                 try:
-                    data = bme.read_data()  # ここでデータを取得
-                    pressure = bme.compensate_P(data)  # 気圧を補正して取得
-                    temperature=bme.compensate_T(data)  # 温度補正
+                    temp_raw, pres_raw = bme.read_data()  # ここでデータを取得
+                    pressure = bme.compensate_P(pres_raw)  # 気圧を補正して取得
+                    temperature = bme.compensate_T(temp_raw)  # 温度補正
                     time.sleep(1.0)
                     alt_1 = bme.altitude(pressure, temperature, qnh=baseline)
 
@@ -61,7 +61,7 @@ def main():
                     time.sleep(0.5)
 
                     # 落下検知の要件に高度が10m以上上昇したか？を追加予定
-                    if(alt_1 >= 1):
+                    if(alt_1 >= 5):
                         phase = 1  # 下向き加速度が5.0m/s^2を超え,かつ高度が10m以上上昇したら落下検知
                         print("Go to falling phase")
 
@@ -73,9 +73,9 @@ def main():
             # ************************************************** #
             if(phase == 1):
                 try:
-                    data = bme.read_data()  # ここでデータを取得
-                    pressure = bme.compensate_P(data)  # 気圧を補正して取得
-                    temperature=sensor.compensate_T(data)  # 温度補正
+                    temp_raw, pres_raw = bme.read_data()  # ここでデータを取得
+                    pressure = bme.compensate_P(pres_raw)  # 気圧を補正して取得
+                    temperature = bme.compensate_T(temp_raw)  # 温度補正
                     time.sleep(1.0)
                     alt_2 = bme.altitude(pressure, temperature, qnh=baseline)
 
@@ -85,7 +85,7 @@ def main():
                     time.sleep(0.5)
 
                     # 落下終了検知の要件に高度が基準高度であるか？加速度変化がないか？を追加予定
-                    if(accel_z > -0.50) and (alt_2 <= 0.50):  # 下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
+                    if(accel_z > -0.50) and (alt_2 <= 1):  # 下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
                         phase = 2
                         print("Go to phase2")
                         
@@ -190,3 +190,4 @@ GPIO.output(pin, 0)
 # 備考:main()に投げるだけ
 if __name__ == "__main__":
     main()
+
