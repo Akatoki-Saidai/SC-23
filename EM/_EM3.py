@@ -1,3 +1,4 @@
+#気圧と気温
 import time
 import smbus
 import RPi.GPIO as GPIO
