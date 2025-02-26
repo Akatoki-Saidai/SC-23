@@ -4,8 +4,8 @@ import math
 import warnings
 import pyproj
 
+"""緯度を取得する関数（値が取得できるまで無限ループ）"""
 def get_latitude():
-    """緯度を取得する関数（値が取得できるまで無限ループ）"""
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
     print("緯度取得開始")
 
@@ -24,8 +24,8 @@ def get_latitude():
                 pass  # 例外処理を追加しました。
         time.sleep(0.01)
 
+"""経度を取得する関数（値が取得できるまで無限ループ）"""
 def get_longitude():
-    """経度を取得する関数（値が取得できるまで無限ループ）"""
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
     print("経度取得開始")
 
@@ -59,15 +59,17 @@ a = 6378137.0
 b = 6356752.314245
 f = (a - b) / a
 
-# 埼玉大学　サークル会館 (ゴール地点の例)
+##################################################
+#                    入力                        #
+##################################################
+# 宇宙航空研究開発機構(JAXA)種子島宇宙センターグラウンド (ゴール地点の例)
 # 緯度経度をWGS84楕円体に基づいて設定
-goal_lat = 35.861311223522975  # 緯度
-goal_lon = 139.60753289749846  # 経度
+goal_lat = 30.374896924724634  # 緯度
+goal_lon = 130.95764140244341  # 経度
 
-# 平壌　朝鮮中央動物園 (初期計測位置の例、スタート地点の例)
-# 緯度経度をWGS84楕円体に基づいて設定
-start_lat = 39.075796567290304  # 緯度
-start_lon = 125.81494394894224  # 経度
+
+
+
 
 # pyprojを使ってWGS84楕円体に基づく投影を定義
 # Proj('+proj=latlong +ellps=WGS84') は、
@@ -75,8 +77,8 @@ start_lon = 125.81494394894224  # 経度
 # ellps=WGS84 でWGS84楕円体を指定しています。
 wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
 
+"""現在地からゴールまでの距離と角度を計算する関数"""
 def calculate_distance_and_angle(current_lat, current_lon):
-    """現在地からゴールまでの距離と角度を計算する関数"""
 
     # 現在地の緯度経度をメートルに変換
     # pyproj.transform を使って、
@@ -84,10 +86,8 @@ def calculate_distance_and_angle(current_lat, current_lon):
     # WGS84楕円体に基づいてメートル単位に変換しています。
     current_x, current_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)
 
-    # スタート地点の緯度経度をメートルに変換
+    # スタート地点とゴール地点の緯度経度をメートルに変換
     start_x, start_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), start_lon, start_lat)
-
-    # ゴール地点の緯度経度をメートルに変換
     goal_x, goal_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), goal_lon, goal_lat)
 
     # スタート地点から現在地までの距離を計算する
@@ -107,19 +107,17 @@ def calculate_distance_and_angle(current_lat, current_lon):
         return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
-        return 100, math.pi * 2
+        return 2323232323, math.pi * 2
 
 
-# 初期位置を取得
+# 初期位置の緯度経度を取得
 current_lat = get_latitude()
 current_lon = get_longitude()
 
-# ゴールに到達するまで繰り返す
+# ゴールの10 m以内に到達するまで繰り返す
 while True:
-    # 距離と角度を計算
+    # 距離と角度を計算し、表示
     distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon)
-
-    # 距離と角度の情報を表示
     print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
     print("theta_for_goal(rad):", angle_to_goal)
     print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
@@ -146,7 +144,7 @@ while True:
     current_lat = get_latitude()
     current_lon = get_longitude()
 
-    # ゴールに到達したらループを抜ける
+    # ゴールの10 m以内に到達したらループを抜ける
     if distance_to_goal < 10:  # 10メートル以内になったら近距離フェーズに入る
         print("近距離フェーズに移行")
         break
