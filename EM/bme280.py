@@ -92,7 +92,7 @@ class BME280Sensor:
         self.compensate_P(pres_raw)
         self.compensate_H(hum_raw)
 
-        return pres_raw  # pres_rawを返す
+        return  pres_raw #pres_rawを返す
 
     def compensate_P(self, adc_P):
         global t_fine
@@ -118,7 +118,7 @@ class BME280Sensor:
         v2 = ((pressure / 4.0) * self.digP[7]) / 8192.0
         pressure = pressure + ((v1 + v2 + self.digP[6]) / 16.0)
 
-        print("pressure : %7.2f hPa" % (pressure / 100))
+        #print("pressure : %7.2f hPa" % (pressure / 100))
         return pressure / 100
 
     def compensate_T(self, adc_T):
@@ -127,7 +127,8 @@ class BME280Sensor:
         v2 = (adc_T / 131072.0 - self.digT[0] / 8192.0) * (adc_T / 131072.0 - self.digT[0] / 8192.0) * self.digT[2]
         t_fine = v1 + v2
         temperature = t_fine / 5120.0
-        #print("temp : %-6.2f ℃" % (temperature))
+        print("temp : %-6.2f ℃" % (temperature))
+        return temperature
 
     def compensate_H(self, adc_H):
         global t_fine
@@ -165,8 +166,9 @@ class BME280Sensor:
 
 # 使用方法
 sensor = BME280Sensor()
-data = sensor.read_data()  # pres_rawを取得する
+#data = sensor.read_data()  # pres_rawを取得する
+data = sensor.read_data()  # 補正後の温度、気圧を取得
 pressure = sensor.compensate_P(data)  # 気圧補正
-temperature=sensor.compensate_T(data)  # 温度補正
+temperature = sensor.compensate_T(data)  # 温度補正
 sensor.altitude(pressure, temperature)  # 高度計算
 print('alt_base_press', sensor.baseline(pressure))  # ベースライン計算
