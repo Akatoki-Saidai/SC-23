@@ -80,8 +80,8 @@ def main():
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
 
-                    #落下終了検知の要件に高度が基準高度であるか？加速度変化がないか？を追加予定
-                    if(accel_z > -0.5) and (alt_2 <= 0.1): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
+                    #落下終了検知の要件に高度が基準高度であるか？加速度変化がないか？
+                    if(accel_z > -0.5) and (alt_2 <= 1): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
                         phase = 2
                 except Exception as e:
                     print(f" An error occurred in phase1 : {e}")
@@ -90,15 +90,15 @@ def main():
             #             遠距離フェーズ(phase = 2)                #
             # ************************************************** #
             if(phase==2):
-		    #ニクロム線を切ります
-                    #使うpin番号
-                    pin = 16
-                    GPIO.setmode(GPIO.BCM)
-                    GPIO.setup(pin, GPIO.OUT)
-                    GPIO.output(pin,1)
-                    #電流を送る時間
-                    time.sleep(5)
-                    GPIO.output(pin,0)
+		#ニクロム線を切ります
+                #使うpin番号
+                pin = 16
+                GPIO.setmode(GPIO.BCM)
+                GPIO.setup(pin, GPIO.OUT)
+                GPIO.output(pin,1)
+                #電流を送る時間
+                time.sleep(5)
+                GPIO.output(pin,0)
 
                 try:
                     if(distance <= 10): #目標までの距離が10mを切ったらフェーズ3に移行
