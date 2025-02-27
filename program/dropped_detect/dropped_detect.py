@@ -3,7 +3,7 @@ import smbus
 import RPi.GPIO as GPIO
 import make_csv
 
-from bme280 import BME280Sensor
+from bme280ver2 import BME280Sensor
 from bno055 import BNO055
 
 def main():
