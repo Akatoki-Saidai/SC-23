@@ -60,7 +60,7 @@ def main():
                     time.sleep(0.5)
 
                     # 落下検知の要件に高度が10m以上上昇したか？を追加予定
-                    if(alt_1 >= 1):
+                    if(accel_z < -5.0) and (alt_1 >= 1):
                         phase = 1  # 下向き加速度が5.0m/s^2を超え,かつ高度が10m以上上昇したら落下検知
                         print("Go to falling phase")
 
