@@ -90,6 +90,16 @@ def main():
             #             遠距離フェーズ(phase = 2)                #
             # ************************************************** #
             if(phase==2):
+		    #ニクロム線を切ります
+                    #使うpin番号
+                    pin = 16
+                    GPIO.setmode(GPIO.BCM)
+                    GPIO.setup(pin, GPIO.OUT)
+                    GPIO.output(pin,1)
+                    #電流を送る時間
+                    time.sleep(5)
+                    GPIO.output(pin,0)
+
                 try:
                     if(distance <= 10): #目標までの距離が10mを切ったらフェーズ3に移行
                         phase = 3
@@ -171,15 +181,6 @@ def main():
          print(f"An error occurred in print bno055 date: {e}")
     return
 
-    #ニクロム線を切ります
-    #使うpin番号
-    pin = 16
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(pin, GPIO.OUT)
-    GPIO.output(pin,1)
-    #電流を送る時間
-    time.sleep(5)
-    GPIO.output(pin,0)
 
 ############################################
 #ここより下は消さない
