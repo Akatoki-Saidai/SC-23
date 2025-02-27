@@ -19,15 +19,16 @@ def main():
                 bme.read_data()
             except Exception as e:
                 print(f"An error occurred during empty measurement in BME: {e}")
-                print('msg', f"An error occurred during empty measurement in BME: {e}")
+                make_csv.print('msg', f"An error occurred during empty measurement in BME: {e}")
 
         data = bme.read_data()  # ここでデータを取得
         pressure = bme.compensate_P(data)  # 気圧を補正して取得
         make_csv.print("alt_base_press",pressure)
         baseline = bme.baseline(pressure)
+        make_csv.print("msg","all clear(bme280)")
     except Exception as e:
         print(f"An error occured in setting bme object: {e}")
-        print('serious_error', f"An error occured in setting bme280 object: {e}")
+        make_csv.print('serious_error', f"An error occured in setting bme280 object: {e}")
     #led_red.blink(0.5, 0.5, 10, 0)
 
     #9軸のセットアップ
@@ -35,10 +36,14 @@ def main():
         bno = BNO055()
         if bno.begin() is not True:
             print("Error initializing device")
+            make_csv.print("serious_error","Error initializing device")
         time.sleep(1)
         bno.setExternalCrystalUse(True)
+        make_csv.print("msg","all clear(bno055)")
+
     except Exception as e:
         print(f"An error occurred in setting bno055: {e}")
+        make_csv.print("serious_error",f"An error occurred in setting bno055: {e}")
 
     phase = 0 #フェーズ0から開始
 
@@ -51,20 +56,25 @@ def main():
             if(phase==0):
 
                 try:
-		    
-		    data = bme.read_data()  # ここでデータを取得
-            	    pressure = bme.compensate_P(data)  # 気圧を補正して取得
-            	    alt_1 = bme.altitude(pressure, qnh=baseline)
-			
+
+                    data = bme.read_data()  # ここでデータを取得
+                    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+                    time.sleep(1.0)
+                    alt_1 = bme.altitude(pressure, qnh=baseline)
+
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
-
+                    print(f"accel_z:",{linear_accel})
+                    time.sleep(0.5)
                     #落下検知の要件に高度が10m以上上昇したか？を追加予定
                     if(accel_z < -5.0) and (alt_1 >= 10):
                         phase = 1 #下向き加速度が5.0m/s^2を超え,かつ高度が10m以上上昇したら落下検知
+                        print("Go falling phase")
+                        make_csv.print("msg","Go falling phase")
 
                 except Exception as e:
                     print(f" An error occurred in phase0 : {e}")
+                    make_csv.print("error",f" An error occurred in phase0 : {e}")
 
             # ************************************************** #
             #             落下フェーズ(phase = 1)                #
@@ -72,19 +82,26 @@ def main():
 
             if(phase==1):
                 try:
-			
-		    data = bme.read_data()  # ここでデータを取得
-            	    pressure = bme.compensate_P(data)  # 気圧を補正して取得
-            	    alt_2 = bme.altitude(pressure, qnh=baseline)
-			
+
+                    data = bme.read_data()  # ここでデータを取得
+                    pressure = bme.compensate_P(data)  # 気圧を補正して取得
+                    time.sleep(1.0)
+
+                    alt_2 = bme.altitude(pressure, qnh=baseline)
+
+
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
+                    print(f"accel_z:",{linear_accel})
+                    time.sleep(0.5)
 
                     #落下終了検知の要件に高度が基準高度であるか？加速度変化がないか？
-                    if(accel_z > -0.5) and (alt_2 <= 1): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
+                    if(accel_z > -0.5) and (alt_2 <= 0.50): #下向き加速度が0.5m/s^2以下だったらフェーズ2に移行
                         phase = 2
                 except Exception as e:
                     print(f" An error occurred in phase1 : {e}")
+                    make_csv.print("error",f" An error occurred in phase1 : {e}")
+
 
             # ************************************************** #
             #             遠距離フェーズ(phase = 2)                #
