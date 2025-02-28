@@ -60,7 +60,7 @@ def main():
                     print(f"accel_z: {accel_z}")
                     time.sleep(0.5)
 
-                    # 落下検知の要件: 高度が10m以上上昇し、加速度が-5.0m/s^2以下
+                    # 落下検知の要件: 高度が1m以上上昇し、加速度が-5.0m/s^2以下
                     if accel_z < -5.0 and alt_1 >= 1:
                         phase = 1
                         print("Go to falling phase")
@@ -98,19 +98,18 @@ def main():
                     print(f"An error occurred in phase1: {e}")
 
             # ************************************************** #
-            #             遠距離フェーズ(phase = 2)                #
+            #             遠距離フェーズ(phase = 2)              #
             # ************************************************** #
             elif phase == 2:
-                #ニクロム線を切ります
-                #使うpin番号
-                pin = 16
-                GPIO.setmode(GPIO.BCM)
-                GPIO.setup(pin, GPIO.OUT)
-                GPIO.output(pin,1)
-                #電流を送る時間
-                time.sleep(5)
-                GPIO.output(pin,0)
                 try:
+                    # ニクロム線を切る処理
+                    pin = 16
+                    GPIO.setmode(GPIO.BCM)
+                    GPIO.setup(pin, GPIO.OUT)
+                    GPIO.output(pin, 1)
+                    time.sleep(5)
+                    GPIO.output(pin, 0)
+
                     print("フェーズ2: デバッグ中")
                     time.sleep(10)  # デバッグ用
                     distance = get_distance_from_sensor()  
@@ -144,7 +143,7 @@ def main():
                     print(f"An error occurred in phase4 : {e}")
 
             # ************************************************** #
-            #             ゴールフェーズ(phase = 5)                #
+            #             ゴールフェーズ(phase = 5)              #
             # ************************************************** #
             elif phase == 5:
                 try:
@@ -158,5 +157,6 @@ def main():
 # メイン関数の呼び出し
 if __name__ == "__main__":
     main()
+
 
 
