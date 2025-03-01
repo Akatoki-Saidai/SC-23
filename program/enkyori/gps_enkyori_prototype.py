@@ -4,6 +4,7 @@ import math
 import warnings
 import pyproj
 
+
 """緯度を取得する関数（値が取得できるまで無限ループ）"""
 def get_latitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
@@ -103,7 +104,10 @@ current_lon = get_longitude()
 
 # 移動していない判定のカウンター
 no_movement_count = 0
-
+#遠距離フェーズ最初の5秒前進を実行
+accel(motor_right,motor_left)
+time.sleep(2)
+stop()
 # ゴールの10 m以内に到達するまで繰り返す
 while True:
     # 前回の現在地を保存
@@ -134,7 +138,12 @@ while True:
         rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
         # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
         # ... (replace with your motor control function) ...
+        leftturn(motor_right,motor_left)
         time.sleep(rotation_time)  # 計算された時間だけ回転
+        stop()
+        time.sleep(1)
+        accel(motor_right,motor_left)
+        time.sleep(5)
         # ... (stop motor) ...
     else:
         print("進行方向に対して右方向にゴールがあります")
@@ -142,8 +151,22 @@ while True:
         rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
         # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
         # ... (replace with your motor control function) ...
+        rightturn(motor_right,motor_left)
         time.sleep(rotation_time)  # 計算された時間だけ回転
+        stop()
+        time.sleep(1)
+        accel(motor_right,motor_left)
+        time.sleep(5)
         # ... (stop motor) ...
+    #スタック検知がyesの場合
+    retreat(motor_right,motor_left)
+    time.sleep(3)
+    rightturn(motor_right,motor_left)
+    time.sleep(1)
+    accel(motor_right,motor_left)
+    time.sleep(2)
+
+
 
     # 現在地を更新
     current_lat = get_latitude()
