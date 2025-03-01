@@ -102,10 +102,6 @@ no_movement_count = 0
 
 # ゴールの10 m以内に到達するまで繰り返す
 while True:
-    # 前回の現在地を保存
-    previous_lat = current_lat
-    previous_lon = current_lon
-
     print(current_lat, current_lon)  # 現在位置
 
     # 距離と角度を計算し、表示
@@ -122,6 +118,10 @@ while True:
             break  # whileループを抜けて近距離フェーズに移行
     else:
         no_movement_count = 0  # 移動が検出されたらカウンターをリセット
+
+    # 前回の現在地を保存
+    previous_lat = current_lat
+    previous_lon = current_lon
 
     # 進行方向を決定
     if angle_to_goal > 0:
