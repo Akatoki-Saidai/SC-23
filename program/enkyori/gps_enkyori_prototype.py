@@ -4,6 +4,10 @@ import math
 import warnings
 import pyproj
 
+from bno055 import BNO055
+import drv8835
+
+
 
 """緯度を取得する関数（値が取得できるまで無限ループ）"""
 def get_latitude():
@@ -105,9 +109,9 @@ current_lon = get_longitude()
 # 移動していない判定のカウンター
 no_movement_count = 0
 #遠距離フェーズ最初の5秒前進を実行
-accel(motor_right,motor_left)
+drv8835.accel(motor_right,motor_left)
 time.sleep(2)
-stop()
+drv8835.stop()
 # ゴールの10 m以内に到達するまで繰り返す
 while True:
     # 前回の現在地を保存
@@ -138,33 +142,47 @@ while True:
         rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
         # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
         # ... (replace with your motor control function) ...
-        leftturn(motor_right,motor_left)
+        drv8835.leftturn(motor_right,motor_left)
         time.sleep(rotation_time)  # 計算された時間だけ回転
-        stop()
+        drv8835.stop()
         time.sleep(1)
-        accel(motor_right,motor_left)
-        time.sleep(5)
-        # ... (stop motor) ...
+
     else:
         print("進行方向に対して右方向にゴールがあります")
         # ゴールへの角度に比例した時間だけ右回転
         rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
         # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
         # ... (replace with your motor control function) ...
-        rightturn(motor_right,motor_left)
+        drv8835.rightturn(motor_right,motor_left)
         time.sleep(rotation_time)  # 計算された時間だけ回転
-        stop()
+        drv8835.stop()
         time.sleep(1)
-        accel(motor_right,motor_left)
-        time.sleep(5)
-        # ... (stop motor) ...
-    #スタック検知がyesの場合
-    retreat(motor_right,motor_left)
-    time.sleep(3)
-    rightturn(motor_right,motor_left)
+
+    #5秒前進
+    drv8835.accel(motor_right,motor_left)
     time.sleep(1)
-    accel(motor_right,motor_left)
-    time.sleep(2)
+    is_stacking = 1
+    for i in range(5):
+        Gyro = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
+        gyro_xyz = abs(Gyro[0]) + abs(Gyro[1]) + abs(Gyro[2])
+        is_stacking = is_stacking and (gyro_xyz < 0.75)
+        time.sleep(0.2)
+    if is_stacking:
+        #スタック検知がyesの場合
+        drv8835.retreat(motor_right,motor_left)
+        time.sleep(3)
+        drv8835.rightturn(motor_right,motor_left)
+        time.sleep(1)
+        drv8835.accel(motor_right,motor_left)
+        time.sleep(2)#ここにスタックしたときの処理
+    else:
+        #スタック検知できなかったら
+        #あと3秒動かすコードをここに書く
+
+
+    # ... (stop motor) ...
+
+
 
 
 
