@@ -182,8 +182,9 @@ while True:
     else:
         #スタック検知できなかったら
         time.sleep(2) # l165 + l169 = 3s ∴あと2s
-        #あと3秒動かすコードをここに書く
-
+        #３秒動かすコード
+        drv8835.accel(motor_right, motor_left)  # ここで動かす処理を追加
+        time.sleep(3) 
 
     # ... (stop motor) ...
     drv8835.stop()
