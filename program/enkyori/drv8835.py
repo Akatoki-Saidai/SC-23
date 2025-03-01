@@ -505,7 +505,7 @@ def stop():
     time.sleep(1)
 
 
-print("retreat")
+"""print("retreat")
 retreat(motor_right,motor_left)
 time.sleep(2)
 stop()
@@ -524,3 +524,4 @@ leftturn(motor_right,motor_left)
 stop()
 
 print("Finish!!!!!!!!!!")
+"""
