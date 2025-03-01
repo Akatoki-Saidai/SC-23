@@ -161,7 +161,7 @@ while True:
 
     #5秒前進
     drv8835.accel(motor_right,motor_left)
-    time.sleep(1)
+    time.sleep(5)
 
     #スタック検知
     is_stacking = 1
