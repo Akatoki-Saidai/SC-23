@@ -18,7 +18,7 @@ def main():
                 bme.read_data()
             except Exception as e:
                 print(f"An error occurred during empty measurement in BME: {e}")
-                print('msg', f"An error occurred during empty measurement in BME: {e}")
+                make_csv.print('msg', f"An error occurred during empty measurement in BME: {e}")
 
         data = bme.read_data()  # ここでデータを取得
         pressure = bme.compensate_P(data)  # 気圧を補正して取得
@@ -27,18 +27,20 @@ def main():
 
     except Exception as e:
         print(f"An error occurred in setting bme object: {e}")
-        print('serious_error', f"An error occurred in setting bme280 object: {e}")
+        make_csv.print('serious_error', f"An error occurred in setting bme280 object: {e}")
 
     # 9軸のセットアップ
     try:
         bno = BNO055()
         if not bno.begin():
             print("Error initializing device")
+            make_csv.print("Error initializing device")
         time.sleep(1)
         bno.setExternalCrystalUse(True)
 
     except Exception as e:
         print(f"An error occurred in setting bno055: {e}")
+        make_csv,print('serious_error',f"An error occurred in setting bno055: {e}")
 
     phase = 0  # フェーズ0から開始
 
@@ -50,23 +52,26 @@ def main():
             # ************************************************** #
             if phase == 0:
                 try:
-                    data = bme.read_data()  
-                    pressure = bme.compensate_P(data)  
+                    data = bme.read_data()
+                    pressure = bme.compensate_P(data)
                     time.sleep(1.0)
                     alt_1 = bme.altitude(pressure, qnh=baseline)
 
                     linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                     accel_x, accel_y, accel_z = linear_accel
                     print(f"accel_z: {accel_z}")
+                    make_csv.print("msg",f"accel_z: {accel_z}")
                     time.sleep(0.5)
 
                     # 落下検知の要件: 高度が1m以上上昇し、加速度が-5.0m/s^2以下
                     if accel_z < -5.0 and alt_1 >= 1:
                         phase = 1
                         print("Go to falling phase")
+                        make_csv.print("msg","Go to falling phase")
 
                 except Exception as e:
                     print(f"An error occurred in phase0 : {e}")
+                    make_csv.print("error",f"An error occurred in phase0 : {e}")
 
             # ************************************************** #
             #             落下フェーズ(phase = 1)                #
@@ -83,32 +88,42 @@ def main():
                         linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                         accel_x, accel_y, accel_z = linear_accel
 
-                        if accel_z > -0.5 and alt_2 <= 1:  
+                        if accel_z > -0.5 and alt_2 <= 1:
                             consecutive_count += 1
                             print(f"条件を満たしました: {consecutive_count}/5")
+                            make_csv.print(f"条件を満たしました: {consecutive_count}/5")
                         else:
                             consecutive_count = 0  # 条件が崩れたらリセット
 
                         if consecutive_count >= 5:
+
+                            make_csv.print("msg","ニクロム線切断開始")
+                            #ニクロム線切断
+                            pin = 16
+                            GPIO.setmode(GPIO.BCM)
+                            GPIO.setup(pin, GPIO.OUT)
+                            GPIO.output(pin, 1)
+                            time.sleep(5)
+                            GPIO.output(pin, 0)
+                            make_csv.print("msg","ニクロム線切断完了")
+
+
                             phase = 2
+
                             print("フェーズ2に移行")
-                            break  
+                            make_csv.print("フェーズ2に移行")
+                            break
 
                 except Exception as e:
                     print(f"An error occurred in phase1: {e}")
+                    make_csv.print("error",f"An error occurred in phase1 : {e}")
 
             # ************************************************** #
             #             遠距離フェーズ(phase = 2)              #
             # ************************************************** #
             elif phase == 2:
                 try:
-                    # ニクロム線を切る処理
-                    pin = 16
-                    GPIO.setmode(GPIO.BCM)
-                    GPIO.setup(pin, GPIO.OUT)
-                    GPIO.output(pin, 1)
-                    time.sleep(5)
-                    GPIO.output(pin, 0)
+
 
                     print("フェーズ2: デバッグ中")
                     time.sleep(10)  # デバッグ用
