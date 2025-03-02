@@ -117,6 +117,27 @@ else:
 
             camera_order = analyze_red(frame, mask)
 
+            if camera_order == 1:
+                accel(motor_right,motor_left)
+                time.sleep(2)
+                stop()
+
+            
+            elif camera_order == 2:
+                rightturn(motor_right,motor_left)
+                time.sleep(0.1)
+                stop()
+
+            elif camera_order == 3:
+                leftturn(motor_right,motor_left)
+                time.sleep(0.1)
+                stop()
+
+            check_stuck()
+
+
+            
+
         
             # 面積のもっとも大きい領域を表示
             # 結果表示
@@ -133,7 +154,7 @@ else:
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 break
 
-        elif (camera_order == 0):
+        if (camera_order == 0):
             print("Goal Goal Goal")
             break
 
@@ -141,12 +162,14 @@ else:
 picam2.close()
 stop()
 
+#LED点灯
+GPIO.output(5, 1)
+time.sleep(23)
+
 # ウィンドウを閉じる
 cv2.destroyAllWindows()
 
-
-
-
+'''
 #################################################################
 
 while area<10000:#カメラでゴール判定まで持ってく
@@ -203,3 +226,4 @@ while area<10000:#カメラでゴール判定まで持ってく
 
 if area>=10000:
     break
+'''
