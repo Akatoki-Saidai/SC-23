@@ -2,6 +2,7 @@ import time
 import smbus
 import RPi.GPIO as GPIO
 import make_csv
+import cv2
 
 import serial
 import time
@@ -13,6 +14,9 @@ from bno055 import BNO055
 import drv8835
 import make_csv
 from bme280ver2 import BME280Sensor
+from picamera2 import Picamera2
+
+
 
 
 ####
@@ -23,9 +27,20 @@ from gpiozero import Motor
 from gpiozero.pins.pigpio import PiGPIOFactory
 import numpy as np
 
+####################################
+#変数
+##########################
 
+CameraStart = False
 
+##############################
+#LEDの話
+############################
 
+# BCM(GPIO番号)で指定する設定
+GPIO.setmode(GPIO.BCM)
+# GPIO5を出力モード設定
+GPIO.setup(5, GPIO.OUT)
 
 ##############################################
 ###GPSの話
@@ -490,6 +505,152 @@ print("Finish!!!!!!!!!!")
 '''
 
 
+#################################
+##カメラの話
+############################
+
+
+def red_detect(frame):
+    # HSV色空間に変換
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # 赤色のHSVの値域1
+    hsv_min = np.array([0, 117, 104])
+    hsv_max = np.array([11, 255, 255])
+    mask1 = cv2.inRange(hsv, hsv_min, hsv_max)
+
+    # 赤色のHSVの値域2
+    hsv_min = np.array([169, 117, 104])
+    hsv_max = np.array([179, 255, 255])
+    mask2 = cv2.inRange(hsv, hsv_min, hsv_max)
+ 
+    return mask1 + mask2
+
+def analyze_red(frame, mask):
+        
+    camera_order = 4
+    # 画像の中にある領域を検出する
+    contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+    #画像の中に赤の領域があるときにループ
+    if 0 < len(contours):
+                    
+        # 輪郭群の中の最大の輪郭を取得する-
+        biggest_contour = max(contours, key=cv2.contourArea)
+
+        # 最大の領域の外接矩形を取得する
+        rect = cv2.boundingRect(biggest_contour)
+
+        # 最大の領域の中心座標を取得する
+        center_x = (rect[0] + rect[2] // 2)
+        center_y = (rect[1] + rect[3] // 2)
+
+        # 最大の領域の面積を取得する-
+        area = cv2.contourArea(biggest_contour)
+
+        # 最大の領域の長方形を表示する
+        cv2.rectangle(frame, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (0, 0, 255), 2)
+
+        # 最大の領域の中心座標を表示する
+        cv2.circle(frame, (center_x, center_y), 5, (0, 255, 0), -1)
+
+        # 最大の領域の面積を表示する
+        cv2.putText(frame, str(area), (rect[0], rect[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 1)
+
+        cv2.putText(frame, str(center_x), (center_x, center_y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 1)
+
+
+        frame_center_x = frame.shape[1] // 2
+        # 中心座標のx座標が画像の中心より大きいか小さいか判定
+        if area > 50000:
+            print("十分近い")
+            camera_order = 0
+            stop()
+
+        else:
+            if frame_center_x -  50 <= center_x <= frame_center_x + 50:
+                #accel(motor_right,motor_left)
+                print("赤色物体は画像の中心にあります。")#直進
+                camera_order = 1
+                
+            elif center_x > frame_center_x + 50:
+                #rightturn(motor_right,motor_left)
+                print("赤色物体は画像の右側にあります。")#右へ
+                camera_order = 2
+                stop()
+                
+            elif center_x < frame_center_x - 50:
+                #leftturn(motor_right,motor_left)
+                print("赤色物体は画像の左側にあります。")#左へ
+                camera_order = 3
+                stop()
+
+    else:
+        print("何もないです未検出")
+        #accel(motor_right, motor_left)
+        camera_order = 4
+
+        # red_result = cv2.drawContours(mask, [biggest_contour], -1, (0, 255, 0), 2)
+
+    return camera_order
+
+
+
+
+
+############################################
+#スタック検知の話
+##########################################
+
+
+def check_stuck():
+    #スタック検知を行い、スタック解除の動作を実行する
+    try:
+        is_stacking = True
+
+        # 5回ジャイロデータを取得し、動きがほぼないかチェック
+        for _ in range(5):
+            gyro_data = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
+            gyro_xyz = abs(gyro_data[0]) + abs(gyro_data[1]) + abs(gyro_data[2])
+            is_stacking = is_stacking and (gyro_xyz < 0.75)
+            time.sleep(0.1)  # 100msごとにデータ取得
+
+        # スタック検知時の処理
+        if is_stacking:
+            # GPIO5の出力を1にして、LED点灯
+            for i in range(0,2):
+                GPIO.output(5,1)
+                time.sleep(0.5)
+                GPIO.output(5,0)
+                time.sleep(0.5)
+            GPIO.output(5, 1)
+        
+            print("Stacking detected!")
+            make_csv.print("warning", "Stacking detected!")
+
+            # スタック解除のための動作
+            retreat(motor_right, motor_left)  # 3秒後退
+            time.sleep(3)
+
+            rightturn(motor_right, motor_left)  # 1秒右旋回
+            time.sleep(1)
+
+            accel(motor_right, motor_left)  # 2秒前進
+            time.sleep(2)
+
+            stop()  # 停止
+
+            # GPIO17の出力を0にして、LED消灯
+            GPIO.output(17, 0)
+
+            time.sleep(1)
+
+    except Exception as e:
+        print(f"An error occurred in stack check: {e}")
+        make_csv.print("error", f"An error occurred in stack check: {e}")
+
+
+
 ##################################################
 #                      入力                      #
 ##################################################
@@ -592,6 +753,7 @@ def main():
 
 
     phase = 0  # フェーズ0から開始
+
 
     try:
         # ここから無限ループ
@@ -718,7 +880,7 @@ def main():
                 #スタック検知
                 is_stacking = 1
                 for i in range(5):
-                    Gyro = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
+                    Gyro = bno.getVector(BNO055.VECTOR_GYROSCOPE)
                     gyro_xyz = abs(Gyro[0]) + abs(Gyro[1]) + abs(Gyro[2])
                     is_stacking = is_stacking and (gyro_xyz < 0.75)
                     time.sleep(0.2)
@@ -744,8 +906,8 @@ def main():
                     # 機体がひっくり返ってたら回る
                 try:
                     accel_start_time = time.time()
-                    if 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2]:
-                        while 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2] and time.time()-accel_start_time < 5:
+                    if 0 < bno.getVector(BNO055.VECTOR_GRAVITY)[2]:
+                        while 0 < bno.getVector(BNO055.VECTOR_GRAVITY)[2] and time.time()-accel_start_time < 5:
                             print('muki_hantai')
                             make_csv.print('warning', 'muki_hantai')
                             drv8835.accel(motor_right, motor_left)
@@ -775,37 +937,100 @@ def main():
                 # ゴールの10 m以内に到達したらループを抜け近距離フェーズへ
                 if distance_to_goal <= 10:
                     print("近距離フェーズに移行")
+                    phase = 3
                     break
 
             # ************************************************** #
-            #             近距離フェーズⅠ(phase = 3)              #
+            #             近距離フェーズ(phase = 3)              #
             # ************************************************** #
             elif phase == 3:
                 try:
-                    red = get_red_value_from_sensor()  
-                    if red >= 30:  
-                        phase = 4
+    
+                    try:
+                        picam2 = Picamera2()
+                        config = picam2.create_preview_configuration({"format": 'XRGB8888', "size": (320, 240)})
+                        picam2.configure(config)
+
+                    except Exception as e:
+                        print(f"An error occurred in init camera: {e}")
+
+
+                    if picam2 is None:
+                        print("Failed to initialize the camera. Exiting...")
+                    else:
+
+
+                        # フレームを取得
+
+                        if (phase == 2 and CameraStart == False):
+
+                            picam2.start()
+                            CameraStart = True
+
+
+                        if (CameraStart == True):
+
+                            frame = picam2.capture_array()
+
+
+                            # 赤色を検出
+                            mask = red_detect(frame)
+
+                            camera_order = analyze_red(frame, mask)
+
+                            if camera_order == 1:
+                                accel(motor_right,motor_left)
+                                time.sleep(2)
+                                stop()
+
+            
+                            elif camera_order == 2:
+                                rightturn(motor_right,motor_left)
+                                time.sleep(0.1)
+                                stop()
+
+                            elif camera_order == 3:
+                                leftturn(motor_right,motor_left)
+                                time.sleep(0.1)
+                                stop()
+
+                            check_stuck()
+
+
+
+
+
+                            # 面積のもっとも大きい領域を表示
+                            # 結果表示
+                            # cv2.putText(frame, "o", (frame.shape[1] // 2 ,frame.shape[1] // 2 ), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 3)
+                            cv2.imshow("Frame", frame)
+                            # cv2.imshow("Mask", mask)
+                            time.sleep(0.1) # フレーム再取得までの時間
+
+                            if camera_order == 0:
+                                print("Goal Goal Goal")
+                                phase = 4
+                                # カメラを終了
+                                picam2.close()
+                                stop()
+
+                                
+
+
 
                 except Exception as e:
                     print(f"An error occurred in phase3 : {e}")
 
+
             # ************************************************** #
-            #             近距離フェーズⅡ(phase = 4)              #
+            #             ゴールフェーズ(phase = 4)              #
             # ************************************************** #
             elif phase == 4:
                 try:
-                    if red >= 80:
-                        phase = 5
-
-                except Exception as e:
-                    print(f"An error occurred in phase4 : {e}")
-
-            # ************************************************** #
-            #             ゴールフェーズ(phase = 5)              #
-            # ************************************************** #
-            elif phase == 5:
-                try:
                     print("Goal reached! LED on.")
+                    #LED点灯
+                    GPIO.output(5, 1)
+                    make_csv.print("msg","Goal reached! LED on.")
                 except Exception as e:
                     print(f"An error occurred in phase5 : {e}")
 
