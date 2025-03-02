@@ -1,3 +1,5 @@
+from picamera2 import Picamera2
+
 # なんかフェーズの変数(近距離フェーズ)
 phase = 2
 CameraStart = False
