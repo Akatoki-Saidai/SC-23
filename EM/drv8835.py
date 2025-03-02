@@ -241,20 +241,7 @@ def leftturn(right, left):
     left.value = -1
     csv.print('motor', [-1, 1])
 
-    time.sleep(0.5 + random.random()/2)##### 実験で決定 #####
-
-    for i in range(int(1 / delta_power)):
-        if (-1 <= power <= 1):
-            right.value = power
-            left.value = -1 * power
-        
-        power -= delta_power
-
-    right.value = 0
-    left.value = 0
-    csv.print('motor', [0, 0])
-    csv.print('msg', 'motor: leftturn')
-
+    
 
 
 # 右旋回
@@ -276,20 +263,7 @@ def rightturn(right, left):
     left.value = 1
     csv.print('motor', [1, -1])
 
-    time.sleep(0.5 + random.random()/2)##### 実験で決定 #####
-
-    for i in range(int(1 / delta_power)):
-        if (-1 <= power <= 1):
-            right.value = -1 * power
-            left.value = power
-        
-        power -= delta_power
-            
-    right.value = 0
-    left.value = 0
-    csv.print('motor', [0, 0])
-    csv.print('msg', 'motor: rightturn')
-
+   
     
 
 
