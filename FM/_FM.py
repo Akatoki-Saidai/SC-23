@@ -11,7 +11,6 @@ import warnings
 import pyproj
 
 from bno055 import BNO055
-import drv8835
 import make_csv
 from bme280ver2 import BME280Sensor
 from picamera2 import Picamera2
@@ -28,10 +27,26 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 import numpy as np
 
 ####################################
-#変数
+#変数___入力
 ##########################
 
 CameraStart = False
+
+# モータを起動させたときの機体の回転速度ω[rad/s]
+omega = math.pi / 2  # rad/s
+
+# WGS84楕円体のパラメータを定義
+a = 6378137.0
+b = 6356752.314245
+f = (a - b) / a
+
+# 宇宙航空研究開発機構(JAXA)種子島宇宙センターグラウンド (ゴール地点の例)
+# 緯度経度をWGS84楕円体に基づいて設定
+goal_lat = 30.374896924724634  # 緯度
+goal_lon = 130.95764140244341  # 経度
+
+# pyprojを使ってWGS84楕円体に基づく投影を定義
+wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
 
 ##############################
 #LEDの話
@@ -651,42 +666,9 @@ def check_stuck():
 
 
 
-##################################################
-#                      入力                      #
-##################################################
-# モータを起動させたときの機体の回転速度ω[rad/s]
-omega = math.pi / 2  # rad/s
 
-# WGS84楕円体のパラメータを定義
-a = 6378137.0
-b = 6356752.314245
-f = (a - b) / a
 
-##################################################
-#                      入力                      #
-##################################################
-# 宇宙航空研究開発機構(JAXA)種子島宇宙センターグラウンド (ゴール地点の例)
-# 緯度経度をWGS84楕円体に基づいて設定
-goal_lat = 30.374896924724634  # 緯度
-goal_lon = 130.95764140244341  # 経度
 
-# pyprojを使ってWGS84楕円体に基づく投影を定義
-wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
-
-# 初期位置の緯度経度を取得
-start_lat = get_latitude()
-start_lon = get_longitude()
-
-# 移動していない判定のカウンター
-no_movement_count = 0
-#遠距離フェーズ最初の5秒前進を実行
-drv8835.accel(motor_right,motor_left)
-time.sleep(5)
-drv8835.stop()
-
-#5秒進んだ先での現在位置を得る
-current_lat = get_latitude()
-current_lon = get_longitude()
 
 def main():
 
@@ -823,7 +805,28 @@ def main():
 
                             print("フェーズ2に移行")
                             make_csv.print("フェーズ2に移行")
-                            break
+
+                            time.sleep(1)
+
+
+                            # 初期位置の緯度経度を取得
+                            start_lat = get_latitude()
+                            start_lon = get_longitude()
+
+                            # 移動していない判定のカウンター
+                            no_movement_count = 0
+                            #遠距離フェーズ最初の5秒前進を実行
+                            accel(motor_right,motor_left)
+                            time.sleep(5)
+                            stop()
+
+                            #5秒進んだ先での現在位置を得る
+                            current_lat = get_latitude()
+                            current_lon = get_longitude()
+                            print(current_lat, current_lon)  # 現在位置
+
+
+                            #break
 
                 except Exception as e:
                     print(f"An error occurred in phase1: {e}")
@@ -833,7 +836,7 @@ def main():
             #             遠距離フェーズ(phase = 2)              #
             # ************************************************** #
             elif phase == 2:
-                print(current_lat, current_lon)  # 現在位置
+
 
                 # 距離と角度を計算し、表示
                 distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon, start_lat, start_lon)
@@ -856,10 +859,10 @@ def main():
                     # ゴールへの角度に比例した時間だけ左回転
                     rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
                     # 左に計算された時間だけ回転
-                    drv8835.leftturn(motor_right,motor_left)
+                    leftturn(motor_right,motor_left)
                     time.sleep(rotation_time)
 
-                    drv8835.stop()
+                    stop()
                     time.sleep(1)
 
                 else:
@@ -867,14 +870,14 @@ def main():
                     # ゴールへの角度に比例した時間だけ右回転
                     rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
                     # 右に計算された時間だけ回転
-                    drv8835.rightturn(motor_right,motor_left)
+                    rightturn(motor_right,motor_left)
                     time.sleep(rotation_time)
 
-                    drv8835.stop()
+                    stop()
                     time.sleep(1)
 
                 ###5秒前進###
-                drv8835.accel(motor_right,motor_left)
+                accel(motor_right,motor_left)
                 time.sleep(2)
 
                 #スタック検知
@@ -886,21 +889,21 @@ def main():
                     time.sleep(0.2)
                 if is_stacking:
                     #スタック検知がyesの場合
-                    drv8835.retreat(motor_right,motor_left)
+                    retreat(motor_right,motor_left)
                     time.sleep(3)
-                    drv8835.rightturn(motor_right,motor_left)
+                    rightturn(motor_right,motor_left)
                     time.sleep(1)
-                    drv8835.accel(motor_right,motor_left)
+                    accel(motor_right,motor_left)
                     time.sleep(2)#ここにスタックしたときの処理
                 else:
                     #スタック検知できなかったら
                     time.sleep(2) # l165 + l169 = 3s ∴あと2s
                     #３秒動かすコード
-                    drv8835.accel(motor_right, motor_left)  # ここで動かす処理を追加
+                    accel(motor_right, motor_left)  # ここで動かす処理を追加
                     time.sleep(3) 
 
                 # ... (stop motor) ...
-                drv8835.stop()
+                stop()
                 #モーター止める
 
                     # 機体がひっくり返ってたら回る
@@ -910,18 +913,18 @@ def main():
                         while 0 < bno.getVector(BNO055.VECTOR_GRAVITY)[2] and time.time()-accel_start_time < 5:
                             print('muki_hantai')
                             make_csv.print('warning', 'muki_hantai')
-                            drv8835.accel(motor_right, motor_left)
+                            accel(motor_right, motor_left)
                             time.sleep(0.5)
                     else:
                         if time.time()-accel_start_time >= 5:
                         # 5秒以内に元の向きに戻らなかった場合
-                            drv8835.rightturn(motor_right, motor_left)
-                            drv8835.leftturn(motor_right, motor_left)
+                            rightturn(motor_right, motor_left)
+                            leftturn(motor_right, motor_left)
                             continue
                         else:
                             print('muki_naotta')
                             make_csv.print('msg', 'muki_naotta')
-                            drv8835.brake(motor_right, motor_left)
+                            brake(motor_right, motor_left)
                 except Exception as e:
                     print(f"An error occured while changing the orientation: {e}")
                     make_csv.print('error', f"An error occured while changing the orientation: {e}")
@@ -945,7 +948,7 @@ def main():
             # ************************************************** #
             elif phase == 3:
                 try:
-    
+
                     try:
                         picam2 = Picamera2()
                         config = picam2.create_preview_configuration({"format": 'XRGB8888', "size": (320, 240)})
@@ -1014,7 +1017,7 @@ def main():
                                 picam2.close()
                                 stop()
 
-                                
+
 
 
 
@@ -1031,6 +1034,7 @@ def main():
                     #LED点灯
                     GPIO.output(5, 1)
                     make_csv.print("msg","Goal reached! LED on.")
+                    time.sleep(10)
                 except Exception as e:
                     print(f"An error occurred in phase5 : {e}")
 
