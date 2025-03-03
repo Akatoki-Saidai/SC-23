@@ -39,3 +39,17 @@ time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_
 "921.820205857","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.05517313880245221",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 "921.821733346","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.03","-0.24",,,,,,,,,,,,,
 "921.822499748","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.24",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+
+
+time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_time,date,lat,lon,alt,alt_base_press,goal_lat,goal_lon,temp,press,camera_area,camera_order,camera_center_x,camera_center_y,camera_frame_size_x,camera_frame_size_y,motor_l,motor_r,goal_relative_x,goal_relative_y,goal_relative_angle_rad,goal_distance,accel_all_x,accel_all_y,accel_all_z,accel_line_x,accel_line_y,accel_line_z,mag_x,mag_y,mag_z,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,euler_x,euler_y,euler_z,nmea
+"2129.871199818","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"-33.621544926857254",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2140.62539131","/home/SC-23/program/FM/FM_ver2/_FM.py","main","691",,,,,,,,,,,,"1017.0344983525893",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2152.918301287","/home/SC-23/program/FM/FM_ver2/_FM.py","main","744",,,,"セットアップ完了",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2152.918608748","/home/SC-23/program/FM/FM_ver2/_FM.py","main","745",,,,,,"0",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2153.923004038","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.7334989453877765",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2153.924553901","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.04","-0.23",,,,,,,,,,,,,
+"2153.925068473","/home/SC-23/program/FM/FM_ver2/_FM.py","main","759",,,,"accel_z: -0.23",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2154.425461607","/home/SC-23/program/FM/FM_ver2/_FM.py","main","744",,,,"セットアップ完了",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"2154.425794864","/home/SC-23/program/FM/FM_ver2/_FM.py","main","745",,,,,,"0",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
