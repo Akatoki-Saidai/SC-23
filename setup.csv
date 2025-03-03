@@ -1,0 +1,41 @@
+
+
+
+
+time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_time,date,lat,lon,alt,alt_base_press,goal_lat,goal_lon,temp,press,camera_area,camera_order,camera_center_x,camera_center_y,camera_frame_size_x,camera_frame_size_y,motor_l,motor_r,goal_relative_x,goal_relative_y,goal_relative_angle_rad,goal_distance,accel_all_x,accel_all_y,accel_all_z,accel_line_x,accel_line_y,accel_line_z,mag_x,mag_y,mag_z,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,euler_x,euler_y,euler_z,nmea
+"606.380403873","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"-44.14835756076861",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"617.111075754","/home/SC-23/program/FM/FM_ver2/_FM.py","main","691",,,,,,,,,,,,"1018.1398969937967",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"630.415128239","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.21383991408583286",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"630.417884533","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.02","-0.19",,,,,,,,,,,,,
+"630.418570621","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.19",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"631.923129746","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"-0.1032966022027765",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"631.924751438","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.02","-0.22",,,,,,,,,,,,,
+"631.925387211","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.22",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"633.430104634","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.7352377767251957",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"633.431578234","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.02","-0.2",,,,,,,,,,,,,
+"633.432372746","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.2",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"634.937308485","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.12016187889383914",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"634.939065898","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.01","-0.19",,,,,,,,,,,,,
+"634.939623745","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.19",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"636.444259674","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.5862657505311367",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"636.446893413","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"-0.02","-0.04","-0.26",,,,,,,,,,,,,
+"636.447656889","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.26",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"637.9524458","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.204239655756182",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"637.955229483","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.05","-0.22",,,,,,,,,,,,,
+"637.95579259","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.22",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"639.460467616","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.9034188497432926",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"639.462703025","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.01","-0.02","-0.2",,,,,,,,,,,,,
+"639.463266743","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.2",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+
+
+
+time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_time,date,lat,lon,alt,alt_base_press,goal_lat,goal_lon,temp,press,camera_area,camera_order,camera_center_x,camera_center_y,camera_frame_size_x,camera_frame_size_y,motor_l,motor_r,goal_relative_x,goal_relative_y,goal_relative_angle_rad,goal_distance,accel_all_x,accel_all_y,accel_all_z,accel_line_x,accel_line_y,accel_line_z,mag_x,mag_y,mag_z,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,euler_x,euler_y,euler_z,nmea
+"896.272878343","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"-41.81525094648387",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"907.006300509","/home/SC-23/program/FM/FM_ver2/_FM.py","main","691",,,,,,,,,,,,"1017.8711511548524",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"920.312885134","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.29793818924311705",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"920.315087414","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","0.0","-0.19",,,,,,,,,,,,,
+"920.315657539","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.19",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"921.820205857","/home/SC-23/program/FM/FM_ver2/bme280ver2.py","altitude","153",,,,,,,,,,,"0.05517313880245221",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"921.821733346","/home/SC-23/program/FM/FM_ver2/bno055.py","getVector","324",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"0.0","-0.03","-0.24",,,,,,,,,,,,,
+"921.822499748","/home/SC-23/program/FM/FM_ver2/_FM.py","main","757",,,,"accel_z: -0.24",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
