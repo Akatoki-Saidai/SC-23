@@ -12,6 +12,7 @@ import time
 import struct
 
 import make_csv
+from statistics import median
 
 
 ##########
@@ -286,10 +287,16 @@ class BNO055:
 		return self.readBytes(BNO055.BNO055_TEMP_ADDR)[0]
 
 	def getVector(self, vectorType):
-		buf = self.readBytes(vectorType, 6)
-		xyz = struct.unpack('hhh', struct.pack('BBBBBB', buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]))
+		x_data, y_data, z_data = [-1000,-1000,-1000], [-1000,-1000,-1000], [-1000,-1000,-1000]
+		for i in range(3):
+			# 3回測定
+			buf = self.readBytes(vectorType, 6)
+			xyz = struct.unpack('hhh', struct.pack('BBBBBB', buf[0], buf[1], buf[2], buf[3], buf[4], buf[5]))
+			x_data[i], y_data[i], z_data[i] = xyz[0], xyz[1], -1*xyz[2]
+			# time.sleep(0.0001)
 
-		xyz_m = [xyz[0],xyz[1],xyz[2]]
+		# 中央値を使用
+		xyz_m = [median(x_data), median(y_data), median(z_data)]
 
 		if vectorType == BNO055.VECTOR_MAGNETOMETER:
 			scalingFactor = 16.0
