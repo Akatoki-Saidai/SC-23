@@ -313,18 +313,21 @@ class BNO055:
 		elif vectorType == BNO055.VECTOR_GRAVITY:
 			scalingFactor = 100.0
 			result_vector = [i/scalingFactor for i in xyz_m]
+			result_vector[2] *= -1
 			if sum(abs(n) for n in result_vector) > 15:
 				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
 			make_csv.print('grav', result_vector)
 		elif vectorType == BNO055.VECTOR_LINEARACCEL:
 			scalingFactor = 100.0
 			result_vector = [i/scalingFactor for i in xyz_m]
+			result_vector[2] *= -1
 			if sum(abs(n) for n in result_vector) > 25:
 				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
 			make_csv.print('accel_line', result_vector)
 		elif vectorType == BNO055.VECTOR_ACCELEROMETER:
 			scalingFactor = 100.0
 			result_vector = [i/scalingFactor for i in xyz_m]
+			result_vector[2] *= -1
 			if sum(abs(n) for n in result_vector) > 50:
 				raise(ValueError(f'BNO measurement is abnormal. gyro: {result_vector}'))
 			make_csv.print('accel_all', result_vector)
