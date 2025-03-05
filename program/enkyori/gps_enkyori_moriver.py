@@ -4,12 +4,6 @@ import math
 import warnings
 import pyproj
 
-from bno055 import BNO055
-import drv8835
-import make_csv
-
-
-
 """緯度を取得する関数（値が取得できるまで無限ループ）"""
 def get_latitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
@@ -54,29 +48,39 @@ def get_longitude():
 def calculate_distance_and_angle(current_lat, current_lon, start_lat, start_lon):
     # 現在地の緯度経度をメートルに変換
     current_x, current_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)
-
-    # 前回の現在地（スタート地点）の緯度経度をメートルに変換
+    # スタート地点の緯度経度をメートルに変換
     start_x, start_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), start_lon, start_lat)
-
     # ゴール地点の緯度経度をメートルに変換
     goal_x, goal_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), goal_lon, goal_lat)
 
     # スタート地点から現在地までの距離を計算する
-    distance_start_current = math.sqrt((current_x - start_x)**2 + (current_y - start_y)**2)
-
+    distance_current_loc = math.sqrt((current_x - start_x)**2 + (current_y - start_y)**2)
     # スタート地点からゴール地点までの距離を計算
-    distance_start_goal = math.sqrt((goal_x - start_x)**2 + (goal_y - start_y)**2)
-
+    distance_current_goal = math.sqrt((goal_x - start_x)**2 + (goal_y - start_y)**2)
     # 現在地からゴール地点までの距離を計算
-    distance_current_goal = math.sqrt((goal_x - current_x)**2 + (goal_y - current_y)**2)
+    distance_loc_goal = math.sqrt((goal_x - current_x)**2 + (goal_y - current_y)**2)
+
+
 
     # ゴールへの方向を計算 (ラジアン)
     try:
-        theta_for_goal = math.pi - math.acos((distance_start_current ** 2 + distance_start_goal ** 2 - distance_current_goal ** 2) / (2 * distance_current_loc * distance_loc_goal))
-        return distance_start_goal, theta_for_goal
+        theta_for_goal = math.pi - math.acos((distance_current_loc ** 2 + distance_loc_goal ** 2 - distance_current_goal ** 2) / (2 * distance_current_loc * distance_loc_goal))
+        
+        # 進行方向に対して左右どちらの方向にあるかを判定
+        # ここで、進行方向を北向きとした場合の判定ロジックが必要になります。
+        # 例えば、現在地と前回の現在地から進行方向ベクトルを計算し、
+        # ゴール地点へのベクトルとの内積を計算することで判定できます。
+        # 外積の結果が正であれば左方向、負であれば右方向となります。
+        
+        # 以下は、進行方向が北向きで、東向きを正、西向きを負とした場合の例です。
+        # 適切な判定ロジックに置き換えてください。
+        if (current_lon - start_lon) * (goal_lat - current_lat) - (current_lat - start_lat) * (goal_lon - current_lon) < 0:
+            theta_for_goal *= -1  # 右方向の場合は角度を負にする
+
+        return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
-        return 2323232323, math.pi * 2
+        return 2323232323, math.pi * 2 # error code
 
 # FutureWarningを抑制
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -84,7 +88,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 ##################################################
 #                      入力                      #
 ##################################################
-# モータを起動させたときの機体の回転速度ω[rad/s]
+# 機体をモータ出力最大で回転させたときの機体の回転速度ω[rad/s]
 omega = math.pi / 2  # rad/s
 
 # WGS84楕円体のパラメータを定義
@@ -107,14 +111,12 @@ wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
 start_lat = get_latitude()
 start_lon = get_longitude()
 
-# 移動していない判定のカウンター
-no_movement_count = 0
-#遠距離フェーズ最初の5秒前進を実行
-drv8835.accel(motor_right,motor_left)
-time.sleep(5)
-drv8835.stop()
+# 5 s前進
+# drv8835.accel(motor_right, motor_left)
+# time.sleep(5)
+# drv8835.stop()
 
-#5秒進んだ先での現在位置を得る
+# 現在位置の緯度経度を取得
 current_lat = get_latitude()
 current_lon = get_longitude()
 
@@ -127,95 +129,36 @@ while True:
     print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
     print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
 
-    # 移動していない判定
-    if distance_to_goal == 2323232323:  # calculate_distance_and_angle関数で移動していないと判定された場合
-        no_movement_count += 1
-        print("移動していない判定:", no_movement_count, "回")
-        if no_movement_count >= 23:
-            print("移動していない判定が23回に達しました。強制的に近距離フェーズに移行します。")
-            break  # whileループを抜けて近距離フェーズに移行
-    else:
-        no_movement_count = 0  # 移動が検出されたらカウンターをリセット
+    # 前回の現在地を保存
+    start_lat = current_lat
+    start_lon = current_lon
 
     # 進行方向を決定
     if angle_to_goal > 0:
         print("進行方向に対して左方向にゴールがあります")
         # ゴールへの角度に比例した時間だけ左回転
         rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
-        # 左に計算された時間だけ回転
+        # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
         drv8835.leftturn(motor_right,motor_left)
         time.sleep(rotation_time)
-
         drv8835.stop()
-        time.sleep(1)
+        # 5秒前進
+        drv8835.accel(motor_right,motor_left)
+        time.sleep(5)
+        drv8835.stop()
 
     else:
         print("進行方向に対して右方向にゴールがあります")
         # ゴールへの角度に比例した時間だけ右回転
         rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
-        # 右に計算された時間だけ回転
+        # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
         drv8835.rightturn(motor_right,motor_left)
         time.sleep(rotation_time)
-
         drv8835.stop()
-        time.sleep(1)
-
-    ###5秒前進###
-    drv8835.accel(motor_right,motor_left)
-    time.sleep(2)
-
-    #スタック検知
-    is_stacking = 1
-    for i in range(5):
-        Gyro = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
-        gyro_xyz = abs(Gyro[0]) + abs(Gyro[1]) + abs(Gyro[2])
-        is_stacking = is_stacking and (gyro_xyz < 0.75)
-        time.sleep(0.2)
-    if is_stacking:
-        #スタック検知がyesの場合
-        drv8835.retreat(motor_right,motor_left)
-        time.sleep(3)
-        drv8835.rightturn(motor_right,motor_left)
-        time.sleep(1)
+        # 5秒前進
         drv8835.accel(motor_right,motor_left)
-        time.sleep(2)#ここにスタックしたときの処理
-    else:
-        #スタック検知できなかったら
-        time.sleep(2) # l165 + l169 = 3s ∴あと2s
-        #３秒動かすコード
-        drv8835.accel(motor_right, motor_left)  # ここで動かす処理を追加
-        time.sleep(3) 
-
-    # ... (stop motor) ...
-    drv8835.stop()
-    #モーター止める
-
-        # 機体がひっくり返ってたら回る
-    try:
-        accel_start_time = time.time()
-        if 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2]:
-            while 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2] and time.time()-accel_start_time < 5:
-                print('muki_hantai')
-                make_csv.print('warning', 'muki_hantai')
-                drv8835.accel(motor_right, motor_left)
-                time.sleep(0.5)
-        else:
-            if time.time()-accel_start_time >= 5:
-            # 5秒以内に元の向きに戻らなかった場合
-                drv8835.rightturn(motor_right, motor_left)
-                drv8835.leftturn(motor_right, motor_left)
-                continue
-            else:
-                print('muki_naotta')
-                make_csv.print('msg', 'muki_naotta')
-                drv8835.brake(motor_right, motor_left)
-    except Exception as e:
-        print(f"An error occured while changing the orientation: {e}")
-        make_csv.print('error', f"An error occured while changing the orientation: {e}")
-
-
-
-
+        time.sleep(5)
+        drv8835.stop()
 
     # 現在地を更新
     current_lat = get_latitude()
@@ -226,5 +169,5 @@ while True:
         print("近距離フェーズに移行")
         break
 
-    # 一時停止 (デバッグ用)
+    # ちょいまち
     time.sleep(1)
