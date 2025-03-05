@@ -492,7 +492,6 @@ def accel(right, left):
 def stop():
     motor_left.value = 0.0
     motor_right.value = 0.0
-    time.sleep(1)
 
 '''
 print("retreat")
