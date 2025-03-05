@@ -864,44 +864,41 @@ def main():
                 # 距離と角度を計算し、表示
                 distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon, start_lat, start_lon)
                 print("現在地からゴール地点までの距離:", distance_to_goal, "メートル")
-                print("theta_for_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
+                print("angle_to_goal°:", str(angle_to_goal * 180 / math.pi) + "°")
+                make_csv.print("distance_to_goal", distance_to_goal)
+                make_csv.print("angle_to_goal", angle_to_goal)
 
-                # 移動していない判定
-                if distance_to_goal == 2323232323:  # calculate_distance_and_angle関数で移動していないと判定された場合
-                    no_movement_count += 1
-                    print("移動していない判定:", no_movement_count, "回")
-                    if no_movement_count >= 23:
-                        print("移動していない判定が23回に達しました。強制的に近距離フェーズに移行します。")
-                        break  # whileループを抜けて近距離フェーズに移行
-                    else:
-                        no_movement_count = 0  # 移動が検出されたらカウンターをリセット
+                # 前回の現在地を保存
+                start_lat = current_lat
+                start_lon = current_lon
 
                 # 進行方向を決定
                 if angle_to_goal > 0:
                     print("進行方向に対して左方向にゴールがあります")
                     # ゴールへの角度に比例した時間だけ左回転
                     rotation_time = angle_to_goal / omega  # 回転時間 = 角度 / 回転速度
-                    # 左に計算された時間だけ回転
+                    # 左に回転する処理をここに記述 (例: motor(-0.5, 0.5))
                     leftturn(motor_right,motor_left)
                     time.sleep(rotation_time)
-
                     stop()
-                    time.sleep(1)
+                    
+                    # 5秒前進
+                    accel(motor_right,motor_left)
+                    time.sleep(2)
 
                 else:
                     print("進行方向に対して右方向にゴールがあります")
                     # ゴールへの角度に比例した時間だけ右回転
                     rotation_time = abs(angle_to_goal) / omega  # 回転時間 = 角度 / 回転速度
-                    # 右に計算された時間だけ回転
+                    # 右に回転する処理をここに記述 (例: motor(0.5, -0.5))
                     rightturn(motor_right,motor_left)
                     time.sleep(rotation_time)
-
                     stop()
                     time.sleep(1)
 
-                ###5秒前進###
-                accel(motor_right,motor_left)
-                time.sleep(2)
+                    # 5秒前進
+                    accel(motor_right,motor_left)
+                    time.sleep(2)
 
                 #スタック検知
                 is_stacking = 1
@@ -912,6 +909,12 @@ def main():
                     time.sleep(0.2)
                 if is_stacking:
                     #スタック検知がyesの場合
+                    time.sleep(1)
+                    for i in range(1, 5 + 1):
+                        GPIO.output(17, 1)
+                        time.sleep(0.5)
+                        GPIO.output(17, 0)
+                        time.sleep(0.5)
                     retreat(motor_right,motor_left)
                     time.sleep(3)
                     rightturn(motor_right,motor_left)
@@ -927,6 +930,7 @@ def main():
 
                 # ... (stop motor) ...
                 stop()
+                time.sleep(1)
                 #モーター止める
 
                     # 機体がひっくり返ってたら回る
@@ -963,7 +967,7 @@ def main():
 
 
 
-    # 現在地を更新
+                # 現在地を更新
                 current_lat = get_latitude()
                 current_lon = get_longitude()
 
@@ -972,7 +976,7 @@ def main():
                     print("近距離フェーズに移行")
                     phase = 3
                     make_csv.print("phase",3)
-                    
+
 
             # ************************************************** #
             #             近距離フェーズ(phase = 3)              #
