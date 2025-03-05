@@ -204,7 +204,7 @@ def setup(AIN1, AIN2, BIN1, BIN2):
     return right, left#returnをすることで他の関数でもこの値を使うことができる。
 
 # 前進関数
-def accel(right, left):
+def retreat(right, left):
     make_csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -474,7 +474,7 @@ def left_angle(bno, angle_deg, right, left):
 
 
 #ここからは未知(2025年2月22日)
-def retreat(right, left):
+def accel(right, left):
     make_csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
