@@ -9,7 +9,7 @@ import traceback
 try:
     DEBUG = True
 
-    msg_types = ['time', 'file', 'func', 'line', 'serious_error', 'error', 'warning', 'msg', 'format_exception', 'phase', 'gnss_time', 'date', 'lat', 'lon', 'alt', 'alt_base_press', 'goal_lat', 'goal_lon', 'temp', 'press', 'camera_area', 'camera_order', 'camera_center_x', 'camera_center_y', 'camera_frame_size_x', 'camera_frame_size_y', 'motor_l', 'motor_r', 'goal_relative_x', 'goal_relative_y', 'goal_relative_angle_rad', 'goal_distance', 'accel_all_x', 'accel_all_y', 'accel_all_z', 'accel_line_x', 'accel_line_y', 'accel_line_z', 'mag_x', 'mag_y', 'mag_z', 'gyro_x', 'gyro_y', 'gyro_z', 'grav_x', 'grav_y', 'grav_z', 'euler_x', 'euler_y', 'euler_z', 'nmea']
+    msg_types = ['time', 'file', 'func', 'line', 'serious_error', 'error', 'warning', 'msg', 'format_exception', 'phase', 'gnss_time', 'date', 'lat', 'lon', 'alt', 'alt_base_press', 'goal_lat', 'goal_lon', 'temp', 'press', 'camera_area', 'camera_order', 'camera_center_x', 'camera_center_y', 'camera_frame_size_x', 'camera_frame_size_y', 'motor_l', 'motor_r', 'goal_relative_x', 'goal_relative_y', 'angle_to_goal', 'distance_to_goal', 'accel_all_x', 'accel_all_y', 'accel_all_z', 'accel_line_x', 'accel_line_y', 'accel_line_z', 'mag_x', 'mag_y', 'mag_z', 'gyro_x', 'gyro_y', 'gyro_z', 'grav_x', 'grav_y', 'grav_z', 'euler_x', 'euler_y', 'euler_z', 'nmea']
     DEFAULT_DICT = {x : '' for x in msg_types}
 
     filename = 'log.csv'
