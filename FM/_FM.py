@@ -860,6 +860,7 @@ def main():
             # ************************************************** #
             elif phase == 2:
 
+              try:
 
                 # 距離と角度を計算し、表示
                 distance_to_goal, angle_to_goal = calculate_distance_and_angle(current_lat, current_lon, start_lat, start_lon)
@@ -976,6 +977,9 @@ def main():
                     print("近距離フェーズに移行")
                     phase = 3
                     make_csv.print("phase",3)
+              except Exception as e:
+                print(f"An error occurred in phase1: {e}")
+                make_csv.print("error",f"An error occurred in phase1 : {e}")
 
 
             # ************************************************** #
