@@ -30,7 +30,7 @@ import numpy as np
 #変数___入力
 ##########################
 
-CameraStart = False
+
 
 # モータを起動させたときの機体の回転速度ω[rad/s]
 omega = math.pi / 2  # rad/s
@@ -204,7 +204,7 @@ def setup(AIN1, AIN2, BIN1, BIN2):
     return right, left#returnをすることで他の関数でもこの値を使うことができる。
 
 # 前進関数
-def accel(right, left):
+def retreat(right, left):
     make_csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -217,7 +217,7 @@ def accel(right, left):
     left.value = 1
 
     make_csv.print('motor', [1, 1])
-    csv.print('msg', 'motor: accel')
+    make_csv.print('msg', 'motor: accel')
 
 # ブレーキ関数
 def brake(right, left):
@@ -249,7 +249,7 @@ def brake(right, left):
     make_csv.print('msg', 'motor: brake')
 
 # 左旋回
-def leftturn(right, left):
+def rightturn(right, left):
 
     right.value = 0
     left.value = 0
@@ -268,7 +268,7 @@ def leftturn(right, left):
     make_csv.print('motor', [-1, 1])
 
 # 右旋回
-def rightturn(right, left):
+def leftturn(right, left):
     
     right.value = 0
     left.value = 0
@@ -474,7 +474,7 @@ def left_angle(bno, angle_deg, right, left):
 
 
 #ここからは未知(2025年2月22日)
-def retreat(right, left):
+def accel(right, left):
     make_csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -492,7 +492,6 @@ def retreat(right, left):
 def stop():
     motor_left.value = 0.0
     motor_right.value = 0.0
-    time.sleep(1)
 
 '''
 print("retreat")
@@ -622,10 +621,17 @@ def check_stuck():
     #スタック検知を行い、スタック解除の動作を実行する
     try:
         is_stacking = True
+        
+        bno = BNO055()
+        if not bno.begin():
+            print("Error initializing device")
+            make_csv.print("Error initializing device")
+        time.sleep(1)
+        bno.setExternalCrystalUse(True)
 
         # 5回ジャイロデータを取得し、動きがほぼないかチェック
         for _ in range(5):
-            gyro_data = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
+            gyro_data = bno.getVector(BNO055.VECTOR_GYROSCOPE)
             gyro_xyz = abs(gyro_data[0]) + abs(gyro_data[1]) + abs(gyro_data[2])
             is_stacking = is_stacking and (gyro_xyz < 0.75)
             time.sleep(0.1)  # 100msごとにデータ取得
@@ -671,7 +677,8 @@ def check_stuck():
 
 
 def main():
-
+    
+    CameraStart = False
 
     # 温湿度気圧のセットアップ
     try:
@@ -734,12 +741,17 @@ def main():
 
 
 
-    phase = 0  # フェーズ0から開始
+    phase = 1  # フェーズ0から開始
 
 
     try:
+        print("セットアップ完了")
+        make_csv.print("msg","セットアップ完了")
+        make_csv.print("phase",0)
+            
         # ここから無限ループ
         while True:
+
             # ************************************************** #
             #             待機フェーズ(phase = 0)                #
             # ************************************************** #
@@ -761,6 +773,7 @@ def main():
                         phase = 1
                         print("Go to falling phase")
                         make_csv.print("msg","Go to falling phase")
+                        make_csv.print("phase",1)
 
                 except Exception as e:
                     print(f"An error occurred in phase0 : {e}")
@@ -783,28 +796,35 @@ def main():
 
                         if accel_z > -0.5 and alt_2 <= 1:
                             consecutive_count += 1
-                            print(f"条件を満たしました: {consecutive_count}/5")
-                            make_csv.print(f"条件を満たしました: {consecutive_count}/5")
+                            print(f"落下終了の条件を満たしました: {consecutive_count}/5")
+                            make_csv.print("msg",f"落下終了の条件を満たしました: {consecutive_count}/5")
                         else:
                             consecutive_count = 0  # 条件が崩れたらリセット
+                            print(f"落下終了の条件を満たしませんでしたｗｗｗｗ")
 
                         if consecutive_count >= 5:
 
                             make_csv.print("msg","ニクロム線切断開始")
+                            print("ニクロム線切断開始")
+                            
                             #ニクロム線切断
                             pin = 16
+                            '''
                             GPIO.setmode(GPIO.BCM)
                             GPIO.setup(pin, GPIO.OUT)
                             GPIO.output(pin, 1)
                             time.sleep(5)
                             GPIO.output(pin, 0)
+                            '''
                             make_csv.print("msg","ニクロム線切断完了")
+                            print("ニクロム線切断完了")
 
 
                             phase = 2
 
                             print("フェーズ2に移行")
-                            make_csv.print("フェーズ2に移行")
+                            make_csv.print("msg","フェーズ2に移行")
+                            make_csv.print("phase",2)
 
                             time.sleep(1)
 
@@ -812,13 +832,16 @@ def main():
                             # 初期位置の緯度経度を取得
                             start_lat = get_latitude()
                             start_lon = get_longitude()
+                            print("aaaa")
 
                             # 移動していない判定のカウンター
                             no_movement_count = 0
                             #遠距離フェーズ最初の5秒前進を実行
                             accel(motor_right,motor_left)
+                            print("uuuuu")
                             time.sleep(5)
                             stop()
+                            print("haaaaaaaa")
 
                             #5秒進んだ先での現在位置を得る
                             current_lat = get_latitude()
@@ -826,7 +849,7 @@ def main():
                             print(current_lat, current_lon)  # 現在位置
 
 
-                            #break
+                            break
 
                 except Exception as e:
                     print(f"An error occurred in phase1: {e}")
@@ -918,13 +941,20 @@ def main():
                     else:
                         if time.time()-accel_start_time >= 5:
                         # 5秒以内に元の向きに戻らなかった場合
+                            stop()
+                            time.sleep(1)
                             rightturn(motor_right, motor_left)
+                            time.sleep(1)
                             leftturn(motor_right, motor_left)
+                            time.sleep(1)
+                            stop()
+                            
                             continue
                         else:
-                            print('muki_naotta')
-                            make_csv.print('msg', 'muki_naotta')
-                            brake(motor_right, motor_left)
+                            print('muki_seizyou')
+                            make_csv.print('msg', 'muki_seizyou')
+                            stop()
+                            time.sleep(1)
                 except Exception as e:
                     print(f"An error occured while changing the orientation: {e}")
                     make_csv.print('error', f"An error occured while changing the orientation: {e}")
@@ -941,7 +971,8 @@ def main():
                 if distance_to_goal <= 10:
                     print("近距離フェーズに移行")
                     phase = 3
-                    break
+                    make_csv.print("phase",3)
+                    
 
             # ************************************************** #
             #             近距離フェーズ(phase = 3)              #
@@ -949,26 +980,25 @@ def main():
             elif phase == 3:
                 try:
 
-                    try:
-                        picam2 = Picamera2()
-                        config = picam2.create_preview_configuration({"format": 'XRGB8888', "size": (320, 240)})
-                        picam2.configure(config)
 
-                    except Exception as e:
-                        print(f"An error occurred in init camera: {e}")
-
-
-                    if picam2 is None:
-                        print("Failed to initialize the camera. Exiting...")
-                    else:
+                    
 
 
                         # フレームを取得
 
-                        if (phase == 2 and CameraStart == False):
+                        if (phase == 3 and CameraStart == False):
+                            
+                            try:
+                                picam2 = Picamera2()
+                                config = picam2.create_preview_configuration({"format": 'XRGB8888', "size": (320, 240)})
+                                picam2.configure(config)
+
+                            except Exception as e:
+                                print(f"An error occurred in init camera: {e}")
 
                             picam2.start()
                             CameraStart = True
+                            time.sleep(0.1)
 
 
                         if (CameraStart == True):
@@ -980,6 +1010,8 @@ def main():
                             mask = red_detect(frame)
 
                             camera_order = analyze_red(frame, mask)
+                            
+                            
 
                             if camera_order == 1:
                                 accel(motor_right,motor_left)
@@ -1008,11 +1040,13 @@ def main():
                             # cv2.putText(frame, "o", (frame.shape[1] // 2 ,frame.shape[1] // 2 ), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 3)
                             cv2.imshow("Frame", frame)
                             # cv2.imshow("Mask", mask)
+                            cv2.waitKey(1)
                             time.sleep(0.1) # フレーム再取得までの時間
 
                             if camera_order == 0:
                                 print("Goal Goal Goal")
                                 phase = 4
+                                make_csv.print("phase",4)
                                 # カメラを終了
                                 picam2.close()
                                 stop()
