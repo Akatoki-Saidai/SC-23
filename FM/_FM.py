@@ -249,7 +249,7 @@ def brake(right, left):
     make_csv.print('msg', 'motor: brake')
 
 # 左旋回
-def leftturn(right, left):
+def rightturn(right, left):
 
     right.value = 0
     left.value = 0
@@ -268,7 +268,7 @@ def leftturn(right, left):
     make_csv.print('motor', [-1, 1])
 
 # 右旋回
-def rightturn(right, left):
+def leftturn(right, left):
     
     right.value = 0
     left.value = 0
