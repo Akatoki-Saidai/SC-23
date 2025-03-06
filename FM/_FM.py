@@ -677,7 +677,7 @@ def check_stuck():
 
 
 def main():
-    
+
     CameraStart = False
 
     # 温湿度気圧のセットアップ
@@ -752,7 +752,7 @@ def main():
         print("セットアップ完了")
         make_csv.print("msg","セットアップ完了")
         make_csv.print("phase",0)
-            
+
         # ここから無限ループ
         while True:
 
@@ -785,7 +785,12 @@ def main():
 
                         if alt_1 >= 15:
                             ready = True
+                            '''
+                            start_time = time.time
+                            print(start_time)
+                            '''
                             time.sleep(15)
+
 
                     time.sleep(0.5)
 
@@ -901,7 +906,7 @@ def main():
                     leftturn(motor_right,motor_left)
                     time.sleep(rotation_time)
                     stop()
-                    
+
                     # 5秒前進
                     accel(motor_right,motor_left)
                     time.sleep(2)
@@ -946,7 +951,7 @@ def main():
                     time.sleep(2) # l165 + l169 = 3s ∴あと2s
                     #３秒動かすコード
                     accel(motor_right, motor_left)  # ここで動かす処理を追加
-                    time.sleep(3) 
+                    time.sleep(3)
 
                 # ... (stop motor) ...
                 stop()
@@ -996,6 +1001,16 @@ def main():
                     print("近距離フェーズに移行")
                     phase = 3
                     make_csv.print("phase",3)
+
+                '''
+
+                elif time.time - start_time > 3600:
+                    print("10分経過,近距離フェーズに移行")
+                    phase = 3
+                    make_csv.print("phase",3)
+
+                '''
+
               except Exception as e:
                 print(f"An error occurred in phase1: {e}")
                 make_csv.print("error",f"An error occurred in phase1 : {e}")
