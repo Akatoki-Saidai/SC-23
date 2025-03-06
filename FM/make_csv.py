@@ -35,6 +35,9 @@ def print(msg_type : str, msg_data):
         elif msg_type == 'lat_lon':
             output_dict['lat'] = '"' + str(msg_data[0]).replace('"', '""') + '"'
             output_dict['lon'] = '"' + str(msg_data[1]).replace('"', '""') + '"'
+        elif msg_type == 'alt_press':
+            output_dict['alt'] = '"' + str(msg_data[0]).replace('"', '""') + '"'
+            output_dict['press'] = '"' + str(msg_data[1]).replace('"', '""') + '"'
         else:
             output_dict[msg_type] = '"' + str(msg_data).replace('"', '""') + '"'
 

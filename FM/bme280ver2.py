@@ -150,7 +150,8 @@ class BME280Sensor:
         altitude = (((1 - (pow((pressure / qnh), 0.190284))) * 145366.45) / 0.3048) / 10  #p0
         #altitude = ((pow((qnh / pressure), (1.0 / 5.257)) - 1) * (temperature + 273.15)) / 0.0065
         print("altitude : %6.2f" % (altitude))
-        make_csv.print("alt",altitude)
+        data = [altitude,pressure]
+        make_csv.print("alt_press",data)
         return altitude
 
     def baseline(self, pressure):
