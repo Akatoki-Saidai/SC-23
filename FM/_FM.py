@@ -743,6 +743,10 @@ def main():
 
     phase = 1  # フェーズ0から開始
 
+    ready = False
+
+
+
 
     try:
         print("セットアップ完了")
@@ -762,18 +766,31 @@ def main():
                     time.sleep(1.0)
                     alt_1 = bme.altitude(pressure, qnh=baseline)
 
-                    linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
-                    accel_x, accel_y, accel_z = linear_accel
-                    print(f"accel_z: {accel_z}")
-                    make_csv.print("msg",f"accel_z: {accel_z}")
+                    #linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
+                    #accel_x, accel_y, accel_z = linear_accel
+                    #print(f"accel_z: {accel_z}")
+                    #make_csv.print("msg",f"accel_z: {accel_z}")
                     time.sleep(0.5)
 
-                    # 落下検知の要件: 高度が1m以上上昇し、加速度が-5.0m/s^2以下
-                    if accel_z < -5.0 and alt_1 >= 1:
-                        phase = 1
-                        print("Go to falling phase")
-                        make_csv.print("msg","Go to falling phase")
-                        make_csv.print("phase",1)
+                    #ドローンで上げきっているとき
+                    if ready:
+                        if alt_1 <= 10:
+                            phase = 1
+                            print("Go to falling phase")
+                            make_csv.print("msg","Go to falling phase")
+                            make_csv.print("phase",1)
+
+                    #まだドローンで上に上げきっていないとき
+                    else:
+
+                        if alt_1 >= 15:
+                            ready = True
+                            time.sleep(15)
+
+                    time.sleep(1)
+
+
+
 
                 except Exception as e:
                     print(f"An error occurred in phase0 : {e}")
@@ -808,7 +825,7 @@ def main():
 
                             make_csv.print("msg","ニクロム線切断開始")
                             print("ニクロム線切断開始")
-                            
+
                             #ニクロム線切断
                             pin = 16
                             '''
