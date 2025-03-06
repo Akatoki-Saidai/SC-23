@@ -77,6 +77,7 @@ def get_latitude():
                     latitude = float(parts[2]) / 100
                     ser.close()
                     # print("緯度取得完了")
+                    make_csv.print("lat",latitude)
                     return latitude
                     break
             except:
@@ -97,6 +98,7 @@ def get_longitude():
                     longitude = float(parts[4]) / 100
                     ser.close()
                     # print("経度取得完了")
+                    make_csv.print("lon",longitude)
                     return longitude
                     break
             except:
