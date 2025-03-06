@@ -787,7 +787,7 @@ def main():
                             ready = True
                             time.sleep(15)
 
-                    time.sleep(1)
+                    time.sleep(0.5)
 
 
 
