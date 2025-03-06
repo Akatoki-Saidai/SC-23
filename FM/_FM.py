@@ -794,13 +794,15 @@ def main():
                         linear_accel = bno.getVector(BNO055.VECTOR_LINEARACCEL)
                         accel_x, accel_y, accel_z = linear_accel
 
-                        if accel_z > -0.5 and alt_2 <= 1:
+                        if abs(accel_x) + abs(accel_y) + abs(accel_z) < 0.5 and alt_2 <= 1:
                             consecutive_count += 1
                             print(f"落下終了の条件を満たしました: {consecutive_count}/5")
                             make_csv.print("msg",f"落下終了の条件を満たしました: {consecutive_count}/5")
+                            time.sleep(1)
                         else:
                             consecutive_count = 0  # 条件が崩れたらリセット
                             print(f"落下終了の条件を満たしませんでしたｗｗｗｗ")
+                            time.sleep(0.5)
 
                         if consecutive_count >= 5:
 
