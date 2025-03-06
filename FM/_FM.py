@@ -67,6 +67,7 @@ GPIO.setup(5, GPIO.OUT)
 def get_latitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
     # print("緯度取得開始")
+    count_lat = 0
 
     while True:
         line = ser.readline().decode('utf-8').strip()
@@ -80,14 +81,32 @@ def get_latitude():
                     make_csv.print("lat",latitude)
                     return latitude
                     break
+                    
+                count_lat += 1
+                if count_lat % 100 == 0:
+                    print("緯度取得失敗")
+                    make_csv.print("msg","failed to get latitude data")
+
             except:
+                count_lat += 1
+                if count_lat % 100 == 0:
+                    print("緯度取得失敗")
+                    make_csv.print("msg","failed to get latitude data")
+
                 pass  # 例外処理を追加しました。
+                
+        count_lat += 1
+        if count_lat % 100 == 0:
+            print("緯度取得失敗")
+            make_csv.print("msg","failed to get latitude data")
+
         time.sleep(0.01)
 
 """経度を取得する関数（値が取得できるまで無限ループ）"""
 def get_longitude():
     ser = serial.Serial('/dev/serial0', 9600, timeout=10)
     # print("経度取得開始")
+    count_lon = 0
 
     while True:
         line = ser.readline().decode('utf-8').strip()
@@ -101,8 +120,22 @@ def get_longitude():
                     make_csv.print("lon",longitude)
                     return longitude
                     break
+                count_lon += 1
+                if count_lon % 100 == 0:
+                    print("経度取得失敗")
+                    make_csv.print("msg","failed to get longitude data")
+
             except:
+                count_lon += 1
+                if count_lon % 100 == 0:
+                    print("経度取得失敗")
+                    make_csv.print("msg","failed to get longitude data")
                 pass  # 例外処理を追加しました。
+        count_lon += 1
+        if count_lon % 100 == 0:
+            print("経度取得失敗")
+            make_csv.print("msg","failed to get longitude data")
+
         time.sleep(0.01)
 
 """現在地からゴールまでの距離と角度を計算する関数"""
