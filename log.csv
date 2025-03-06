@@ -1,0 +1,14 @@
+
+
+
+
+time,file,func,line,serious_error,error,warning,msg,format_exception,phase,gnss_time,date,lat,lon,alt,alt_base_press,goal_lat,goal_lon,temp,press,camera_area,camera_order,camera_center_x,camera_center_y,camera_frame_size_x,camera_frame_size_y,motor_l,motor_r,goal_relative_x,goal_relative_y,angle_to_goal,distance_to_goal,accel_all_x,accel_all_y,accel_all_z,accel_line_x,accel_line_y,accel_line_z,mag_x,mag_y,mag_z,gyro_x,gyro_y,gyro_z,grav_x,grav_y,grav_z,euler_x,euler_y,euler_z,nmea
+"882.809698634","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"97.16932040575315",,,,,"1002.447811842522",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"893.504176402","/home/SC-23/program/FM/FM_3/_FM.py","main","698",,,,,,,,,,,,"1002.4780783757874",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"905.803906796","/home/SC-23/program/FM/FM_3/_FM.py","main","753",,,,"セットアップ完了",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"905.804528476","/home/SC-23/program/FM/FM_3/_FM.py","main","754",,,,,,"0",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"906.809178111","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"0.39885036350264536",,,,,"1002.4340202868941",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"908.813941006","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"0.7718525122000706",,,,,"1002.3928188804113",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"910.818759282","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"0.5983536059438601",,,,,"1002.4119832079166",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"912.823817585","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"-0.1961893647600765",,,,,"1002.4997505584466",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+"914.828678545","/home/SC-23/program/FM/FM_3/bme280ver2.py","altitude","154",,,,,,,,,,,"0.26355469155209443",,,,,"1002.4489652366824",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
