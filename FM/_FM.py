@@ -780,6 +780,9 @@ def main():
                             make_csv.print("msg","Go to falling phase")
                             make_csv.print("phase",1)
 
+                        else:
+                            print("落下を検知できませんでした")
+
                     #まだドローンで上に上げきっていないとき
                     else:
 
@@ -792,6 +795,9 @@ def main():
                             print('上昇終了を検知')
                             make_csv.print("msg","finished raising")
                             time.sleep(15)
+
+                        else:
+                            print("上昇終了を検知できませんでした")
 
 
                     time.sleep(0.5)
