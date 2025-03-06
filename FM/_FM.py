@@ -789,6 +789,8 @@ def main():
                             start_time = time.time
                             print(start_time)
                             '''
+                            print('上昇終了を検知')
+                            make_csv.print("msg","finished raising")
                             time.sleep(15)
 
 
