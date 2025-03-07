@@ -1,0 +1,32 @@
+SC-23@akatokiSC-23:~/program/enkyori $ python only_gps_drv.py.py
+/home/SC-23/program/enkyori/only_gps_drv.py.py:32: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(PIN_AIN1, GPIO.OUT)
+/home/SC-23/program/enkyori/only_gps_drv.py.py:33: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(PIN_AIN2, GPIO.OUT)
+/home/SC-23/program/enkyori/only_gps_drv.py.py:34: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(PIN_BIN1, GPIO.OUT)
+/home/SC-23/program/enkyori/only_gps_drv.py.py:35: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(PIN_BIN2, GPIO.OUT)
+An error occured in setting motor_driver: name 'motor' is not defined
+10秒前進
+30.41517566666667 130.90123666666665
+現在地からゴール地点までの距離: 21.144774979906988 メートル
+theta_for_goal°: 16.76929656862312°
+進行方向に対して左方向にゴールがあります
+30.415208333333332 130.90121833333333
+現在地からゴール地点までの距離: 17.27710896512946 メートル
+theta_for_goal°: 20.259890015278962°
+進行方向に対して左方向にゴールがあります
+30.415238 130.90119333333334
+現在地からゴール地点までの距離: 13.241329912972787 メートル
+theta_for_goal°: 13.168951196263448°
+進行方向に対して左方向にゴールがあります
+30.415271666666666 130.90119266666667
+現在地からゴール地点までの距離: 11.095816009302453 メートル
+theta_for_goal°: 63.05093885133593°
+進行方向に対して左方向にゴールがあります
+30.41527633333333 130.90114900000003
+現在地からゴール地点までの距離: 7.187280653902121 メートル
+theta_for_goal°: -30.06577402093965°
+進行方向に対して右方向にゴールがあります
+近距離フェーズに移行
