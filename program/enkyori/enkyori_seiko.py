@@ -137,7 +137,7 @@ def accel(right, left):
     right.value = -1
     left.value = -0.7
 
-    # csv.print('motor', [1, 1])
+    # csv.print('motor', [-1, -0.7])
     # csv.print('msg', 'motor: accel')
 
 # ブレーキ関数
