@@ -3,6 +3,422 @@ import numpy as np
 from picamera2 import Picamera2
 import time
 
+delta_power = 0.20
+
+# DCモータのピン設定
+PIN_AIN1 = 18
+PIN_AIN2 = 23
+PIN_BIN1 = 24
+PIN_BIN2 = 13
+
+dcm_pins = {
+    "left_forward": PIN_AIN2,
+    "left_backward": PIN_AIN1,
+    "right_forward": PIN_BIN2,
+    "right_backward": PIN_BIN1,
+}
+
+def main():
+    # GPIOピン番号モードの設定
+    GPIO.setmode(GPIO.BCM)  # または GPIO.setmode(GPIO.BOARD)
+
+    # GPIOピンを出力モードに設定
+    GPIO.setup(PIN_AIN1, GPIO.OUT)
+    GPIO.setup(PIN_AIN2, GPIO.OUT)
+    GPIO.setup(PIN_BIN1, GPIO.OUT)
+    GPIO.setup(PIN_BIN2, GPIO.OUT)
+
+    # 初期化
+    factory = PiGPIOFactory()
+    motor_left = Motor( forward=dcm_pins["left_forward"],
+                        backward=dcm_pins["left_backward"],
+                        pin_factory=factory)
+    motor_right = Motor( forward=dcm_pins["right_forward"],
+                        backward=dcm_pins["right_backward"],
+                        pin_factory=factory)
+
+    # モーターピンをLOWに設定して、終了後にモーターが動かないようにする
+    GPIO.output(PIN_AIN1, GPIO.LOW)
+    GPIO.output(PIN_AIN2, GPIO.LOW)
+    GPIO.output(PIN_BIN1, GPIO.LOW)
+    GPIO.output(PIN_BIN2, GPIO.LOW)
+
+    # GPIOクリーンアップ
+    GPIO.cleanup()
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+    try:
+        # GPIOピン番号ではなく、普通のピン番号
+        PIN_AIN1 = 18#12
+        PIN_AIN2 = 23#16
+        PIN_BIN1 = 24#33
+        PIN_BIN2 = 13#18
+
+        motor_right, motor_left = motor.setup(PIN_AIN1, PIN_AIN2, PIN_BIN1, PIN_BIN2)
+
+    except Exception as e:
+        print(f"An error occured in setting motor_driver: {e}")
+        # csv.print('serious_error', f"An error occured in setting motor_driver: {e}")
+        # led_red.blink(0.5, 0.5, 10, 0)
+
+
+
+def setup(AIN1, AIN2, BIN1, BIN2):
+
+    dcm_pins = {
+                "left_forward": BIN2,
+                "left_backward": BIN1,
+                "right_forward": AIN1,
+                "right_backward": AIN2,
+            }
+
+
+# GPIOピン番号ではなく、普通のラズパイピン番号
+PIN_AIN1 = 18#12
+PIN_AIN2 = 23#16
+PIN_BIN1 = 13#33
+PIN_BIN2 = 24#18
+
+delta_power = 0.20
+
+# モーターの初期化
+try:
+    factory = PiGPIOFactory()
+    motor_left = Motor(forward=PIN_BIN2, backward=PIN_BIN1, pin_factory=factory)
+    motor_right = Motor(forward=PIN_AIN1, backward=PIN_AIN2, pin_factory=factory)
+except Exception as e:
+    print(f"An error occured in setting motor_driver: {e}")
+    # csv.print('serious_error', f"An error occured in setting motor_driver: {e}")
+    # led_red.blink(0.5, 0.5, 10, 0)
+
+delta_power = 0.20
+
+def setup(AIN1, AIN2, BIN1, BIN2):
+    dcm_pins = {
+                "left_forward": BIN2,
+                "left_backward": BIN1,
+                "right_forward": AIN1,
+                "right_backward": AIN2,
+            }
+
+    factory = PiGPIOFactory()
+    left = motor_left( forward=dcm_pins["left_forward"],
+                        backward=dcm_pins["left_backward"],
+                        pin_factory=factory)
+    right = motor_right( forward=dcm_pins["right_forward"],
+                        backward=dcm_pins["right_backward"],
+                        pin_factory=factory)
+    
+    return right, left#returnをすることで他の関数でもこの値を使うことができる。
+
+# 前進関数
+def accel(right, left):
+    # csv.print('motor', [0, 0])
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if 0<=power<=1:
+                right.value = power
+        left.value = power
+        power += delta_power
+
+    right.value = -1
+    left.value = -0.7
+
+    # csv.print('motor', [-1, -0.7])
+    # csv.print('msg', 'motor: accel')
+
+# ブレーキ関数
+def brake(right, left):
+    power_r = float(right.value)
+    power_l = float(left.value)
+
+    # csv.print('motor', [power_r, power_l])
+
+    for i in range(int(1 / delta_power)):
+        if 0<=power_r<=1 and 0<=power_l<=1:
+            right.value = power_r
+            left.value = power_l
+        if power_r > 0:
+            power_r -= delta_power
+        elif power_r < 0:
+            power_r += delta_power
+        else:
+            pass
+        if power_l > 0:
+            power_l -= delta_power
+        elif power_l < 0:
+            power_l += delta_power
+        else:
+            pass
+
+    right.value = 0
+    left.value = 0
+    # csv.print('motor', [0, 0])
+    # csv.print('msg', 'motor: brake')
+
+# 左旋回
+def leftturn(right, left):
+    
+    right.value = 0
+    left.value = 0
+    # csv.print('motor', [0, 0])
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            right.value = power
+            left.value = -1 * power
+        
+        power += delta_power
+
+    power = 1
+    right.value = -0.5
+    left.value = 0.5
+    # csv.print('motor', [-0.5, 0.5])
+
+    
+
+
+# 右旋回
+def rightturn(right, left):
+    
+    right.value = 0
+    left.value = 0
+    # csv.print('motor', [0, 0])
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            right.value = -1 * power
+            left.value = power
+        
+        power += delta_power
+
+    power = 1
+    right.value = 0.5
+    left.value = -0.5
+    # csv.print('motor', [0.5, -0.5])
+
+   
+    
+
+
+
+def rightonly(right, left):
+    
+    right.value = 0
+    left.value = 0
+    # csv.print('motor', [0, 0])
+
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            right.value = power
+
+        power += delta_power
+
+    power = 1
+    right.value = 1
+    # csv.print('motor_r', 1)
+
+    time.sleep(0.1)
+
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            right.value = power
+            
+        power -= delta_power
+
+    right.value = 0
+    # csv.print('motor_r', 0)
+
+
+
+
+def leftonly(right, left):
+    
+    right.value = 0
+    left.value = 0
+    # csv.print('motor', [0, 0])
+    power = 0
+
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            left.value = power
+        
+        power += delta_power
+
+    power = 1
+    left.value = 1
+    # csv.print('motor_l', 1)
+
+    time.sleep(0.1)
+
+    for i in range(int(1 / delta_power)):
+        if (-1 <= power <= 1):
+            left.value = power
+        
+        power -= delta_power
+        
+    left.value = 0
+    # csv.print('motor_l', 0)
+
+
+# 指定した角度だけ右に曲がる
+def right_angle(bno, angle_deg, right, left):
+    # csv.print('msg', f'motor: turn {angle_deg} deg to right')
+    angle_rad = angle_deg*np.pi/180
+    start_time = time.time()
+    prev_time = time.time()
+    rot_angle = 0
+
+    # だんだん加速
+    for i in range(int(1 / delta_power)):
+        right.value, left.value = -i*delta_power, i*delta_power
+        gyro = bno.getVector(BNO055.VECTOR_GYROSCOPE)
+        angle_diff = gyro[2]*(time.time() - prev_time)  # Δ角度 = 角速度 * Δ時間
+        prev_time = time.time()
+        rot_angle += angle_diff
+        if 3 < gyro[2]:
+            break
+    right.value, left.value = -1, 1
+    # csv.print('motor', [left.value, right.value])
+
+    while (prev_time-start_time) < 5:
+        try:
+            gyro = bno.getVector(BNO055.VECTOR_GYROSCOPE)
+            angle_diff = gyro[2]*(time.time() - prev_time)  # Δ角度 = 角速度 * Δ時間
+            prev_time = time.time()
+            rot_angle += angle_diff
+            
+            # 指定した角度になる直前に止まる
+            if rot_angle + 0.45 > angle_rad:
+                break
+            
+            # ひっくり返っているか判定
+            if 0 < bno.getVector(BNO055.VECTOR_GRAVITY)[2]:
+                # csv.print('warning', 'Starts orientation correction in right_angle')
+                accel(right, left)
+                time.sleep(0.5)
+                brake(right, left)
+                # csv.print('msg', 'Finish correcting the orientation in right_angle')
+        except Exception as e:
+            print(f'An error occured in right_angle: {e}')
+            # csv.print('error', f'An error occured in right_angle: {e}')
+    else:
+        # スタックしてます
+        print('stacking now! in right_angle')
+        # csv.print('warning', 'stacking now! in right_angle')
+
+        accel(right, left)
+        time.sleep(1)
+        brake(right, left)
+
+        leftturn(right, left)
+
+        accel(right, left)
+        time.sleep(1)
+        brake(right, left)
+
+        rightturn(right, left)
+    
+    # だんだん減速
+    for i in range(int(1 / delta_power)):
+        right.value, left.value = -1 + i*delta_power, 1 - i*delta_power
+    right.value , left.value = 0, 0
+    # csv.print('motor', [left.value, right.value])
+
+# 指定した角度だけ左に曲がる
+def left_angle(bno, angle_deg, right, left):
+    # csv.print('msg', f'motor: turn {angle_deg} deg to left')
+    angle_rad = angle_deg*np.pi/180
+    start_time = time.time()
+    prev_time = time.time()
+    rot_angle = 0
+    # csv.print('motor', [left.value, right.value])
+
+    # だんだん加速
+    for i in range(int(1 / delta_power)):
+        right.value, left.value = i*delta_power, -i*delta_power
+        gyro = bno.getVector(BNO055.VECTOR_GYROSCOPE)
+        angle_diff = gyro[2]*(time.time() - prev_time)  # Δ角度 = 角速度 * Δ時間
+        prev_time = time.time()
+        rot_angle += angle_diff
+        if 3 < gyro[2]:
+            break
+    right.value, left.value = 1, -1
+
+    while (prev_time-start_time) < 5:
+        try:
+            gyro = bno.getVector(BNO055.VECTOR_GYROSCOPE)
+            angle_diff = gyro[2]*(time.time() - prev_time)  # Δ角度 = 角速度 * Δ時間
+            prev_time = time.time()
+            rot_angle += angle_diff
+            
+            # 指定した角度になる直前に止まる
+            if rot_angle - 0.45 < -angle_rad:
+                break
+
+            # ひっくり返っているか判定
+            if 0 < bno.getVector(BNO055.VECTOR_GRAVITY)[2]:
+                # csv.print('warning', 'Starts orientation correction in left_angle')
+                accel(right, left)
+                time.sleep(0.5)
+                brake(right, left)
+                # csv.print('msg', 'Finish correcting the orientation in left_angle')
+        except Exception as e:
+            print(f'An error occured in left_angle: {e}')
+            # csv.print('error', f'An error occured in left_angle: {e}')
+    else:
+        # スタックしてます
+        print('stacking now! in left_angle')
+        # csv.print('warning', 'stacking now! in left_angle')
+
+        accel(right, left)
+        time.sleep(1)
+        brake(right, left)
+        
+        rightturn(right, left)
+
+        accel(right, left)
+        time.sleep(1)
+        brake(right, left)
+
+        leftturn(right, left)
+    
+    # だんだん減速
+    for i in range(int(1 / delta_power)):
+        right.value, left.value = 1 - i*delta_power, -1 + i*delta_power
+    right.value , left.value = 0, 0
+    # csv.print('motor', [left.value, right.value])
+
+
+#ここからは未知(2025年2月22日)
+def retreat(right, left):
+    # csv.print('motor', [0, 0])
+    power = 0
+    for i in range(int(1 / delta_power)):
+        if 0<=power<=1:
+                right.value = -power
+        left.value = -power
+        power += delta_power
+
+    right.value = 1
+    left.value = 1
+
+    # csv.print('motor', [-1, -1])
+    # csv.print('msg', 'motor: accel')
+
+def stop():
+    motor_left.value = 0.0
+    motor_right.value = 0.0
+    time.sleep(1)
+
 # なんかフェーズの変数(近距離フェーズ)
 phase = 2
 CameraStart = False
@@ -66,25 +482,20 @@ def analyze_red(frame, mask):
 
         else:
             if frame_center_x -  50 <= center_x <= frame_center_x + 50:
-                accel(motor_right,motor_left)
                 print("赤色物体は画像の中心にあります。")#直進
                 camera_order = 1
                 
             elif center_x > frame_center_x + 50:
-                rightturn(motor_right,motor_left)
                 print("赤色物体は画像の右側にあります。")#右へ
                 camera_order = 2
                 stop()
                 
             elif center_x < frame_center_x - 50:
-                leftturn(motor_right,motor_left)
                 print("赤色物体は画像の左側にあります。")#左へ
                 camera_order = 3
-                stop()
-
     else:
         print("何もないです未検出")
-        accel(motor_right, motor_left)
+        camera_order = 4
 
         # red_result = cv2.drawContours(mask, [biggest_contour], -1, (0, 255, 0), 2)
 
@@ -111,11 +522,9 @@ else:
             picam2.start()
             CameraStart = True
         
-
         if (CameraStart == True):
         
             frame = picam2.capture_array()
-            
 
             # 赤色を検出
             mask = red_detect(frame)
@@ -124,35 +533,32 @@ else:
 
             if camera_order == 1:
                 accel(motor_right,motor_left)
-                time.sleep(2)
+                time.sleep(1)
                 stop()
-
             
             elif camera_order == 2:
                 rightturn(motor_right,motor_left)
-                time.sleep(0.1)
+                time.sleep(0.2)
                 stop()
 
             elif camera_order == 3:
                 leftturn(motor_right,motor_left)
-                time.sleep(0.1)
+                time.sleep(0.2)
+                stop()
+
+            elif camera_order == 4:
+                rightturn(right, left)
+                time.sleep(0.5)
                 stop()
 
             check_stuck()
 
-
-            
-
-        
             # 面積のもっとも大きい領域を表示
             # 結果表示
             # cv2.putText(frame, "o", (frame.shape[1] // 2 ,frame.shape[1] // 2 ), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 3)
             cv2.imshow("Frame", frame)
             # cv2.imshow("Mask", mask)
             time.sleep(0.1) # フレーム再取得までの時間
-        
-            #こっからガチのテスト用
-            #print(len(contours))
 
             # qキーを押すと終了(手動停止)
             #なんか反応しないときある
@@ -173,62 +579,3 @@ time.sleep(23)
 
 # ウィンドウを閉じる
 cv2.destroyAllWindows()
-
-'''
-#################################################################
-
-while area<10000:#カメラでゴール判定まで持ってく
-    #スタック検知
-        is_stacking = 1
-        for i in range(5):
-            Gyro = BNO055.getVector(BNO055.VECTOR_GYROSCOPE)
-            gyro_xyz = abs(Gyro[0]) + abs(Gyro[1]) + abs(Gyro[2])
-            is_stacking = is_stacking and (gyro_xyz < 0.75)
-            time.sleep(0.2)
-        if is_stacking:
-            #スタック検知がyesの場合
-            drv8835.retreat(motor_right,motor_left)
-            time.sleep(3)
-            drv8835.rightturn(motor_right,motor_left)
-            time.sleep(1)
-            drv8835.accel(motor_right,motor_left)
-            time.sleep(2)#ここにスタックしたときの処理
-        else:
-        #スタック検知できなかったら
-
-        #あと3秒動かすコードをここに書く
-
-
-    # ... (stop motor) ...
-    #モーター止める
-
-        # 機体がひっくり返ってたら回る
-        try:
-            accel_start_time = time.time()
-            if 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2]:
-                while 0 < BNO055.getVector(BNO055.VECTOR_GRAVITY)[2] and time.time()-accel_start_time < 5:
-                    print('muki_hantai')
-                    make_csv.print('warning', 'muki_hantai')
-                    drv8835.accel(motor_right, motor_left)
-                    time.sleep(0.5)
-                    drv8835.stop()
-            else:
-                if time.time()-accel_start_time >= 5:
-            # 5秒以内に元の向きに戻らなかった場合
-                    drv8835.rightturn(motor_right, motor_left)
-                    drv8835.leftturn(motor_right, motor_left)
-                    continue
-                else:
-                    print('muki_naotta')
-                    make_csv.print('msg', 'muki_naotta')
-                    drv8835.brake(motor_right, motor_left)
-                    drv8835.stop()
-        except Exception as e:
-            print(f"An error occured while changing the orientation: {e}")
-            make_csv.print('error', f"An error occured while changing the orientation: {e}")
-    else:
-        break
-
-if area>=10000:
-    break
-'''
