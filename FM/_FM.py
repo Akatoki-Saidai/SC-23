@@ -33,7 +33,7 @@ import numpy as np
 
 
 # モータを起動させたときの機体の回転速度ω[rad/s]
-omega = math.pi / 2  # rad/s
+omega = math.pi * 2  # rad/s
 
 # WGS84楕円体のパラメータを定義
 a = 6378137.0
