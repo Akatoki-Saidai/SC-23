@@ -185,9 +185,9 @@ def leftturn(right, left):
         power += delta_power
 
     power = 1
-    right.value = 1
-    left.value = -1
-    csv.print('motor', [-1, 1])
+    right.value = 0.5
+    left.value = -0.5
+    csv.print('motor', [-0.5, 0.5])
 
     
 
@@ -207,9 +207,9 @@ def rightturn(right, left):
         power += delta_power
 
     power = 1
-    right.value = -1
-    left.value = 1
-    csv.print('motor', [1, -1])
+    right.value = -0.5
+    left.value = 0.5
+    csv.print('motor', [0.5, -0.5])
 
    
     
@@ -443,7 +443,13 @@ def get_latitude():
             parts = line.split(',')
             try:
                 if len(parts) >= 7 and int(parts[6]) > 0:
-                    latitude = float(parts[2]) / 100
+                    latitude_deg_min = float(parts[2]) / 100  # 度分形式で取得
+                    
+                    # 度数形式に変換
+                    degrees = int(latitude_deg_min)
+                    minutes = latitude_deg_min - degrees
+                    latitude = degrees + minutes / 0.6 
+                    
                     ser.close()
                     # print("緯度取得完了")
                     return latitude
@@ -463,7 +469,13 @@ def get_longitude():
             parts = line.split(',')
             try:
                 if len(parts) >= 7 and int(parts[6]) > 0:
-                    longitude = float(parts[4]) / 100
+                    longitude_deg_min = float(parts[4]) / 100 # 度分形式で取得
+                    
+                    # 度数形式に変換
+                    degrees = int(longitude_deg_min)
+                    minutes = longitude_deg_min - degrees
+                    longitude = degrees + minutes / 0.6
+                    
                     ser.close()
                     # print("経度取得完了")
                     return longitude
@@ -517,7 +529,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 #                      入力                      #
 ##################################################
 # 機体をモータ出力最大で回転させたときの機体の回転速度ω[rad/s]
-omega = math.pi * 2  # rad/s
+omega = math.pi  # rad/s
 
 # WGS84楕円体のパラメータを定義
 a = 6378137.0
@@ -527,27 +539,37 @@ f = (a - b) / a
 ##################################################
 #                      入力                      #
 ##################################################
-# 宇宙航空研究開発機構(JAXA)種子島宇宙センターグラウンド (ゴール地点の例)
+# 公園の地図上の左上のどっか (ゴール地点の例)
 # 緯度経度をWGS84楕円体に基づいて設定
-goal_lat = 30.374896924724634  # 緯度
-goal_lon = 130.95764140244341  # 経度
+goal_lat = 30.415315  # 緯度
+goal_lon = 130.901090  # 経度
 
 # pyprojを使ってWGS84楕円体に基づく投影を定義
 wgs84 = pyproj.Proj('+proj=latlong +ellps=WGS84')
 
 # 初期位置の緯度経度を取得
-start_lat = get_latitude()
-start_lon = get_longitude()
+start_lat = 0
+start_lon = 0
+fo i in range(1, 5 + 1):
+    start_lat += get_latitude()
+    start_lon += get_longitude()
+start_lat = start_lat / 5
+start_lon = start_lon / 5
 
-# 5 s前進
-print("5秒前進")
+# 10 s前進
+print("10秒前進")
 accel(motor_right, motor_left)
-time.sleep(5)
+time.sleep(10)
 stop()
 
 # 現在位置の緯度経度を取得
-current_lat = get_latitude()
-current_lon = get_longitude()
+current_lat = 0
+current_lon = 0
+for i in range(1, 5 + 1):
+    current_lat += get_latitude()
+    current_lon += get_longitude()
+current_lat = current_lat / 5
+current_lon = current_lon / 5
 
 # ゴールの10 m以内に到達するまで繰り返す
 while True:
@@ -590,8 +612,13 @@ while True:
         drv8835.stop()
 
     # 現在地を更新
-    current_lat = get_latitude()
-    current_lon = get_longitude()
+    current_lat = 0
+    current_lon = 0
+    for i in range(1, 5 + 1):
+        current_lat += get_latitude()
+        current_lon += get_longitude()
+    current_lat = current_lat / 5
+    current_lon = current_lon / 5
 
     # ゴールの10 m以内に到達したらループを抜け近距離フェーズへ
     if distance_to_goal <= 10:
