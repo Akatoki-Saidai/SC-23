@@ -897,8 +897,13 @@ def main():
 
 
                             # 初期位置の緯度経度を取得
-                            start_lat = get_latitude()
-                            start_lon = get_longitude()
+                            start_lat = 0
+                            start_lon = 0
+                            for i in range(1, 5 + 1):
+                                start_lat += get_latitude()
+                                start_lon += get_longitude()
+                            start_lat = start_lat / 5
+                            start_lon = start_lon / 5
                             print("aaaa")
 
                             # 移動していない判定のカウンター
@@ -911,8 +916,13 @@ def main():
                             print("haaaaaaaa")
 
                             #5秒進んだ先での現在位置を得る
-                            current_lat = get_latitude()
-                            current_lon = get_longitude()
+                            current_lat = 0
+                            current_lon = 0
+                            for i in range(1, 5 + 1):
+                                current_lat += get_latitude()
+                                current_lon += get_longitude()
+                            current_lat = current_lat / 5
+                            current_lon = current_lon / 5
                             print(current_lat, current_lon)  # 現在位置
 
 
@@ -1036,9 +1046,13 @@ def main():
 
 
                 # 現在地を更新
-                current_lat = get_latitude()
-                current_lon = get_longitude()
-
+                current_lat = 0
+                current_lon = 0
+                for i in range(1, 5 + 1):
+                    current_lat += get_latitude()
+                    current_lon += get_longitude()
+                current_lat = current_lat / 5
+                current_lon = current_lon / 5
                 # ゴールの10 m以内に到達したらループを抜け近距離フェーズへ
                 if distance_to_goal <= 10:
                     print("近距離フェーズに移行")
