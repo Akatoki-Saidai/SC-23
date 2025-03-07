@@ -33,7 +33,7 @@ import numpy as np
 
 
 # モータを起動させたときの機体の回転速度ω[rad/s]
-omega = math.pi * 2  # rad/s
+omega = math.pi  # rad/s
 
 # WGS84楕円体のパラメータを定義
 a = 6378137.0
@@ -225,7 +225,7 @@ def setup(AIN1, AIN2, BIN1, BIN2):
     return right, left#returnをすることで他の関数でもこの値を使うことができる。
 
 # 前進関数
-def retreat(right, left):
+def accel(right, left):
     make_csv.print('motor', [0, 0])
     power = 0
     for i in range(int(1 / delta_power)):
@@ -234,10 +234,10 @@ def retreat(right, left):
         left.value = power
         power += delta_power
 
-    right.value = 1
-    left.value = 1
+    right.value = -1
+    left.value = -0.7
 
-    make_csv.print('motor', [1, 1])
+    make_csv.print('motor', [-1, -0.7])
     make_csv.print('msg', 'motor: accel')
 
 # ブレーキ関数
@@ -270,7 +270,7 @@ def brake(right, left):
     make_csv.print('msg', 'motor: brake')
 
 # 左旋回
-def rightturn(right, left):
+def leftturn(right, left):
 
     right.value = 0
     left.value = 0
@@ -284,12 +284,12 @@ def rightturn(right, left):
         power += delta_power
 
     power = 1
-    right.value = 1
-    left.value = -1
-    make_csv.print('motor', [-1, 1])
+    right.value = -0.5
+    left.value = 0.5
+    make_csv.print('motor', [-0.5, 0.5])
 
 # 右旋回
-def leftturn(right, left):
+def rightturn(right, left):
     
     right.value = 0
     left.value = 0
@@ -303,9 +303,9 @@ def leftturn(right, left):
         power += delta_power
 
     power = 1
-    right.value = -1
-    left.value = 1
-    make_csv.print('motor', [1, -1])
+    right.value = 0.5
+    left.value = -0.5
+    make_csv.print('motor', [0.5, -0.5])
 
 
 def rightonly(right, left):
@@ -495,24 +495,25 @@ def left_angle(bno, angle_deg, right, left):
 
 
 #ここからは未知(2025年2月22日)
-def accel(right, left):
-    make_csv.print('motor', [0, 0])
-    power = 0
-    for i in range(int(1 / delta_power)):
-        if 0<=power<=1:
-                right.value = -power
-        left.value = -power
-        power += delta_power
+def retreat(right, left):
+    for i in range(1, 2 + 1):
+        rightturn(right, left)
+        time.sleep(0.666)
+        stop()
+        accel(right, left)
+        time.sleep(3)
+        stop()
+    rightturn(right, left)
+    time.sleep(0.666)
+    stop()
 
-    right.value = -1
-    left.value = -1
-
-    make_csv.print('motor', [-1, -1])
-    make_csv.print('msg', 'motor: accel')
+    # make_csv.print('motor', [-1, -1])
+    make_csv.print('msg', 'motor: retreat')
 
 def stop():
     motor_left.value = 0.0
     motor_right.value = 0.0
+    make_csv.print('motor', [0, 0])
 
 '''
 print("retreat")
@@ -1100,18 +1101,18 @@ def main():
 
                             if camera_order == 1:
                                 accel(motor_right,motor_left)
-                                time.sleep(2)
+                                time.sleep(1)
                                 stop()
 
             
                             elif camera_order == 2:
                                 rightturn(motor_right,motor_left)
-                                time.sleep(0.1)
+                                time.sleep(0.2)
                                 stop()
 
                             elif camera_order == 3:
                                 leftturn(motor_right,motor_left)
-                                time.sleep(0.1)
+                                time.sleep(0.2)
                                 stop()
 
                             check_stuck()
