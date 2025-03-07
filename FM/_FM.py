@@ -142,30 +142,39 @@ def get_longitude():
 def calculate_distance_and_angle(current_lat, current_lon, start_lat, start_lon):
     # 現在地の緯度経度をメートルに変換
     current_x, current_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), current_lon, current_lat)
-
-    # 前回の現在地（スタート地点）の緯度経度をメートルに変換
+    # スタート地点の緯度経度をメートルに変換
     start_x, start_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), start_lon, start_lat)
-
     # ゴール地点の緯度経度をメートルに変換
     goal_x, goal_y = pyproj.transform(wgs84, pyproj.Proj('+proj=utm +zone=54 +ellps=WGS84'), goal_lon, goal_lat)
 
     # スタート地点から現在地までの距離を計算する
-    distance_start_current = math.sqrt((current_x - start_x)**2 + (current_y - start_y)**2)
-
+    distance_current_loc = math.sqrt((current_x - start_x)**2 + (current_y - start_y)**2)
     # スタート地点からゴール地点までの距離を計算
-    distance_start_goal = math.sqrt((goal_x - start_x)**2 + (goal_y - start_y)**2)
-
+    distance_current_goal = math.sqrt((goal_x - start_x)**2 + (goal_y - start_y)**2)
     # 現在地からゴール地点までの距離を計算
-    distance_current_goal = math.sqrt((goal_x - current_x)**2 + (goal_y - current_y)**2)
+    distance_loc_goal = math.sqrt((goal_x - current_x)**2 + (goal_y - current_y)**2)
+
+
 
     # ゴールへの方向を計算 (ラジアン)
     try:
-        theta_for_goal = math.pi - math.acos((distance_start_current ** 2 + distance_start_goal ** 2 - distance_current_goal ** 2) / (2 * distance_current_loc * distance_loc_goal))
-        return distance_start_goal, theta_for_goal
+        theta_for_goal = math.pi - math.acos((distance_current_loc ** 2 + distance_loc_goal ** 2 - distance_current_goal ** 2) / (2 * distance_current_loc * distance_loc_goal))
+        
+        # 進行方向に対して左右どちらの方向にあるかを判定
+        # ここで、進行方向を北向きとした場合の判定ロジックが必要になります。
+        # 例えば、現在地と前回の現在地から進行方向ベクトルを計算し、
+        # ゴール地点へのベクトルとの外積を計算することで判定できます。
+        # 外積の結果が正であれば左方向、負であれば右方向となります。
+        
+        # 以下は、進行方向が北向きで、東向きを正、西向きを負とした場合の例です。
+        # 適切な判定ロジックに置き換えてください。
+        if (current_lon - start_lon) * (goal_lat - current_lat) - (current_lat - start_lat) * (goal_lon - current_lon) < 0:
+            theta_for_goal *= -1  # 右方向の場合は角度を負にする
+
+        return distance_loc_goal, theta_for_goal
     except:
         print("移動していません")  # 例外処理: ゼロ除算が発生した場合の処理
-        return 2323232323, math.pi * 2
-
+        return 2323232323, math.pi * 2 # error code
 # FutureWarningを抑制
 warnings.filterwarnings("ignore", category=FutureWarning)
 
