@@ -459,16 +459,16 @@ def left_angle(bno, angle_deg, right, left):
 
 #ここからは未知(2025年2月22日)
 def retreat(right, left):
-    csv.print('motor', [0, 0])
-    power = 0
-    for i in range(int(1 / delta_power)):
-        if 0<=power<=1:
-                right.value = -power
-        left.value = -power
-        power += delta_power
-
-    right.value = -1
-    left.value = -1
+    for i in range(1, 2 + 1):
+        rightturn(right, left)
+        time.sleep(0.666)
+        stop()
+        accel(right, left)
+        time.sleep(3)
+        stop()
+    rightturn(right, left)
+    time.sleep(0.666)
+    stop()
 
     csv.print('motor', [-1, -1])
     csv.print('msg', 'motor: accel')
