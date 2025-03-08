@@ -761,7 +761,7 @@ def main():
                         backward=dcm_pins["right_backward"],
                         pin_factory=factory)
 
-
+    stop()
 
     phase = 1  # フェーズ0から開始
 
